@@ -10,6 +10,12 @@
 // std::cout
 #include <iostream>
 
+// std::thread
+#include <thread>
+
+// std::chrono
+#include <chrono>
+
 #include "flags.hpp"
 
 int
@@ -28,14 +34,19 @@ main(int argc, char* argv[]) {
 
 	std::cout << "failure detector listening on " << listen_ip << ":" << listen_port << std::endl;
 
+	std::thread listener([&sock]() {
+		uint8_t buf[16000];
+		while (true) {
+			cpl::net::SockAddr saddr;
+			int len = sock.recvfrom(buf, 16000, 0, &saddr);
+			std::cout << "Message from " <<
+				saddr.address() << ":" << saddr.port() << ": " <<
+				std::string(reinterpret_cast<const char*>(buf), (size_t)len) << std::endl;
+		}
+	});
 
-	uint8_t buf[16000];
 	while (true) {
-		cpl::net::SockAddr saddr;
-		int len = sock.recvfrom(buf, 16000, 0, &saddr);
-		std::cout << "Message from " <<
-			saddr.address() << ":" << saddr.port() << ": " <<
-			std::string(reinterpret_cast<const char*>(buf), (size_t)len) << std::endl;
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
 	return 0;
