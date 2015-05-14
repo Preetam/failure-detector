@@ -30,7 +30,13 @@ main(int argc, char* argv[]) {
 	flags.parse(argc, argv);
 
 	cpl::net::UDP_Socket sock;
-	sock.bind(listen_ip.string(), listen_port);
+
+	try {
+		sock.bind(listen_ip.string(), listen_port);
+	} catch(...) {
+		std::cout << "unable to listen on " << listen_ip << ":" << listen_port << "!" << std::endl;
+		exit(1);
+	}
 
 	std::cout << "failure detector listening on " << listen_ip << ":" << listen_port << std::endl;
 
