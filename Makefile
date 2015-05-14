@@ -14,7 +14,7 @@ BUILD_BINARY = ./failure-detector
 all: build
 
 clean:
-	rm ./test/test
+	rm ./failure-detector
 
 build:
 	$(CXX) $(FLAGS) $(BUILD_SOURCES) $(INCLUDE_DIRS_FLAGS) $(LINK_FLAGS) -o $(BUILD_BINARY)
