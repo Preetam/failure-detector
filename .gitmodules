@@ -1,3 +1,3 @@
-[submodule "libs/cppl"]
-	path = libs/cppl
+[submodule "libs/cpl"]
+	path = libs/cpl
 	url = git@github.com:PreetamJinka/cpplibs.git

@@ -5,10 +5,10 @@
 #include <string>
 
 // cpl::Flags
-#include <cppl/include/flags.hpp>
+#include <cpl/include/flags.hpp>
 
 // cpl::net::IP
-#include <cppl/include/ip.hpp>
+#include <cpl/include/ip.hpp>
 
 void
 show_help(std::string a, std::string b, void* d) {
