@@ -16,24 +16,28 @@
 // std::chrono
 #include <chrono>
 
+#include <vector>
+
 #include "flags.hpp"
 
 int
 main(int argc, char* argv[]) {
 	cpl::net::IP listen_ip("127.0.0.1");
 	int listen_port = 2020;
+	std::vector<std::string> peers;
 
 	cpl::Flags flags("failure-detector", "0.0.1");
 	flags.add_option("--help", "-h", "show help documentation", show_help, &flags);
 	flags.add_option("--listen", "-l", "set listen address", set_listen, &listen_ip);
 	flags.add_option("--port", "-p", "set listen port", set_listen_port, &listen_port);
+	flags.add_option("--peers", "", "add peers", add_peers, &peers);
 	flags.parse(argc, argv);
 
 	cpl::net::UDP_Socket sock;
 
 	try {
 		sock.bind(listen_ip.string(), listen_port);
-	} catch(...) {
+	} catch (...) {
 		std::cout << "unable to listen on " << listen_ip << ":" << listen_port << "!" << std::endl;
 		exit(1);
 	}

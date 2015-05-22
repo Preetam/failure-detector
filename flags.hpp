@@ -28,3 +28,10 @@ set_listen_port(std::string a, std::string b, void* d) {
 	auto listen_port = reinterpret_cast<int*>(d);
 	*listen_port = atoi(b.c_str());
 }
+
+void
+add_peers(std::string a, std::string b, void* d) {
+	auto peers = reinterpret_cast<std::vector<std::string>*>(d);
+
+	std::cout << peers << std::endl;
+}
