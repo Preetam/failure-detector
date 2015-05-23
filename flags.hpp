@@ -5,8 +5,6 @@
 #include <iostream>
 #include <string>
 
-#include <algorithm>
-
 // cpl::Flags
 #include <cpl/include/flags.hpp>
 
