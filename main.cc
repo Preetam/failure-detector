@@ -19,19 +19,27 @@
 #include <vector>
 
 #include "flags.hpp"
+#include "peer.hpp"
 
 int
 main(int argc, char* argv[]) {
 	cpl::net::IP listen_ip("127.0.0.1");
 	int listen_port = 2020;
-	std::vector<std::string> peers;
+	std::vector<std::string> peers_vec;
+	std::vector<Peer> peers;
 
 	cpl::Flags flags("failure-detector", "0.0.1");
 	flags.add_option("--help", "-h", "show help documentation", show_help, &flags);
 	flags.add_option("--listen", "-l", "set listen address", set_listen, &listen_ip);
 	flags.add_option("--port", "-p", "set listen port", set_listen_port, &listen_port);
-	flags.add_option("--peers", "", "add peers", add_peers, &peers);
+	flags.add_option("--peers", "", "add peers", add_peers, &peers_vec);
 	flags.parse(argc, argv);
+
+	// Set up peers.
+
+	for (auto p: peers_vec) {
+		peers.push_back(Peer(p));
+	}
 
 	cpl::net::UDP_Socket sock;
 

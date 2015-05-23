@@ -1,8 +1,11 @@
 #pragma once
 
 #include <cstdlib>
+#include <sstream>
 #include <iostream>
 #include <string>
+
+#include <algorithm>
 
 // cpl::Flags
 #include <cpl/include/flags.hpp>
@@ -33,5 +36,14 @@ void
 add_peers(std::string a, std::string b, void* d) {
 	auto peers = reinterpret_cast<std::vector<std::string>*>(d);
 
-	std::cout << peers << std::endl;
+	std::istringstream ss(b);
+	std::string token;
+
+	while (std::getline(ss, token, ',')) {
+		peers->push_back(token);
+	}
+
+	for (auto p: *peers) {
+		std::cout << "added peer: " << p << std::endl;
+	}
 }
