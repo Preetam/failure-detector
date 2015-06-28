@@ -2,7 +2,8 @@
 #include <cpl/include/ip.hpp>
 
 // cpl::net::UDP_Socket
-#include <cpl/include/udp_socket.hpp>
+#include <cpl/include/tcp_socket.hpp>
+#include <cpl/include/tcp_connection.hpp>
 
 // cpl::net::Sockaddr
 #include <cpl/include/sockaddr.hpp>
@@ -17,6 +18,7 @@
 #include <chrono>
 
 #include <vector>
+#include <memory>
 
 #include "flags.hpp"
 #include "peer.hpp"
@@ -41,10 +43,11 @@ main(int argc, char* argv[]) {
 		peers.push_back(Peer(p));
 	}
 
-	cpl::net::UDP_Socket sock;
+	cpl::net::TCP_Socket sock;
 
 	try {
 		sock.bind(listen_ip.string(), listen_port);
+		sock.listen();
 	} catch (...) {
 		std::cout << "unable to listen on " << listen_ip << ":" << listen_port << "!" << std::endl;
 		exit(1);
@@ -52,16 +55,31 @@ main(int argc, char* argv[]) {
 
 	std::cout << "failure detector listening on " << listen_ip << ":" << listen_port << std::endl;
 
-	std::thread listener([&sock]() {
-		uint8_t buf[16000];
-		while (true) {
-			cpl::net::SockAddr saddr;
-			int len = sock.recvfrom(buf, 16000, 0, &saddr);
-			std::cout << "Message from " <<
-				saddr.address() << ":" << saddr.port() << ": " <<
-				std::string(reinterpret_cast<const char*>(buf), (size_t)len) << std::endl;
-		}
-	});
+	std::vector<std::unique_ptr<std::thread>> threads;
+
+	while (true) {
+		auto new_conn = std::make_unique<cpl::net::TCP_Connection>();
+
+		sock.accept(new_conn.get());
+		auto listener = std::make_unique<std::thread>(
+			[](std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
+				auto conn = conn_ptr.get();
+
+				uint8_t buf[16000];
+				while (true) {
+					int len = conn->recv(buf, 16000, 0);
+					if (len <= 0) {
+						return;
+					}
+					std::cout << "Message from " <<
+						conn->remote_address().address() << ":" <<
+						conn->remote_address().port() << ": " <<
+						std::string(reinterpret_cast<const char*>(buf), (size_t)len) << std::endl;
+				}
+		}, std::move(new_conn));
+
+		threads.push_back(std::move(listener));
+	}
 
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
