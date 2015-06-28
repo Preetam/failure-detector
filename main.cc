@@ -1,7 +1,7 @@
 // cpl::net::IP
 #include <cpl/include/ip.hpp>
 
-// cpl::net::UDP_Socket
+// cpl::net::TCP_Socket
 #include <cpl/include/tcp_socket.hpp>
 #include <cpl/include/tcp_connection.hpp>
 
