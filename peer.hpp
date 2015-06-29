@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cpl/include/address.hpp>
+#include <cpl/include/sockaddr.hpp>
 
 class Peer
 {
@@ -10,7 +10,7 @@ public:
 	{
 	}
 
-	cpl::net::Address address;
+	cpl::net::SockAddr address;
 
 private:
 
