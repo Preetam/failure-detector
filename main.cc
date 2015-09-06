@@ -45,11 +45,15 @@ main(int argc, char* argv[]) {
 
 	cpl::net::TCP_Socket sock;
 
-	try {
-		sock.bind(listen_ip.string(), listen_port);
-		sock.listen();
-	} catch (...) {
-		std::cout << "unable to listen on " << listen_ip << ":" << listen_port << "!" << std::endl;
+	int status;
+	status = sock.bind(listen_ip.string(), listen_port);
+	if (status < 0) {
+		std::cerr << "unable to bind to " << listen_ip << ":" << listen_port << "!" << std::endl;
+		exit(1);
+	}
+	status = sock.listen();
+	if (status < 0) {
+		std::cerr << "unable to listen on " << listen_ip << ":" << listen_port << "!" << std::endl;
 		exit(1);
 	}
 
