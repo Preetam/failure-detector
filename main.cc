@@ -72,8 +72,8 @@ main(int argc, char* argv[]) {
 						return;
 					}
 					std::cout << "Message from " <<
-						conn->remote_address().address() << ":" <<
-						conn->remote_address().port() << ": " <<
+						conn->remote_address().ip << ":" <<
+						conn->remote_address().port << ": " <<
 						std::string(reinterpret_cast<const char*>(buf), (size_t)len) << std::endl;
 				}
 		}, std::move(new_conn));
