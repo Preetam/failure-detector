@@ -2,7 +2,7 @@ BUILD_SOURCES := main.cc
 
 # Includes
 INCLUDE_DIRS := ./include/
-INCLUDE_DIRS += ./libs/
+INCLUDE_DIRS += ./cpl/
 INCLUDE_DIRS_FLAGS := $(foreach d, $(INCLUDE_DIRS), -I$d)
 
 FLAGS = -std=c++14 -Wall
