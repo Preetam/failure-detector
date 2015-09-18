@@ -1,3 +1,0 @@
-[submodule "include/cpl"]
-	path = include/cpl
-	url = git@github.com:Preetam/cpplibs
