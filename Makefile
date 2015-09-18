@@ -30,7 +30,7 @@ clean:
 	rm test/*.o
 
 test: build/test
-	LD_LIBRARY_PATH=./build ./build/test -s -i
+	LD_LIBRARY_PATH=./build ./build/test
 
 valgrind_test: build/test
 	LD_LIBRARY_PATH=./build valgrind ./build/test
