@@ -36,11 +36,6 @@ struct IP
 		addr.v6 = address;
 	}
 
-	IP(const std::string& address)
-	{
-		set(address);
-	}
-
 	inline int
 	set(const std::string& address)
 	{

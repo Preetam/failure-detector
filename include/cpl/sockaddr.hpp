@@ -47,7 +47,10 @@ struct SockAddr
 		if (addr_str[0] == '[' && addr_str[addr_str.size() - 1] == ']') {
 			addr_str = addr_str.substr(1, addr_str.size() - 2);
 		}
-		ip = IP(addr_str);
+
+		if (ip.set(addr_str) < 0) {
+			return -1;
+		}
 		port = atoi(port_str.c_str());
 		return 0;
 	}

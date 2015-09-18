@@ -58,9 +58,13 @@ public:
 	}
 
 	inline int
-	bind(std::string ip, int port) throw()
+	bind(std::string ip_str, int port) throw()
 	{
-		local_address = SockAddr(IP(ip), port);
+		IP ip;
+		if (ip.set(ip_str) < 0) {
+			return -1;
+		}
+		local_address = SockAddr(ip, port);
 		return bind(local_address);
 	}
 

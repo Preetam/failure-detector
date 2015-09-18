@@ -9,16 +9,16 @@ LD_FLAGS = -L./build -lpthread
 
 all: prepare build/failure-detector build/test
 
-obj/%.o: src/%.cc
+obj/%.o: src/%.cc $(INCL)
 	$(CXX) -std=c++14 -fPIC -c -o $@ $<
 
-obj/%.o: test/%.cc
+obj/%.o: test/%.cc $(INCL)
 	$(CXX) -std=c++14 -fPIC -c -o $@ $<
 
-build/failure-detector: prepare $(OBJ) $(INCL)
+build/failure-detector: prepare $(OBJ)
 	$(CXX) -fPIC -o $@ $(OBJ)
 
-build/test: $(TEST_OBJ) $(INCL)
+build/test: $(TEST_OBJ)
 	$(CXX) -o $@ $(TEST_OBJ) $(LD_FLAGS)
 
 prepare:

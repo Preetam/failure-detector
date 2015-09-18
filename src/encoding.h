@@ -59,4 +59,3 @@ write64be(uint64_t v, uint8_t* dest) {
 	v >>= 8;
 	*dest = uint8_t(v);
 }
-
