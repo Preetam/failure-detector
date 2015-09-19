@@ -4,11 +4,14 @@
 #include <cpl/flags.hpp>
 #include <cpl/sockaddr.hpp>
 #include <cpl/tcp_socket.hpp>
+#include <cpl/tcp_connection.hpp>
 
 #include "flags.hpp"
 
 const char* NAME    = "failure-detector";
 const char* VERSION = "0.0.1";
+
+void on_accept(std::unique_ptr<cpl::net::TCP_Connection>);
 
 int
 main(int argc, char* argv[]) {
@@ -43,6 +46,21 @@ main(int argc, char* argv[]) {
 		exit(1);
 	}
 
+	while (true) {
+		auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
+		if (sock.accept(conn_ptr.get()) == 0) {
+			on_accept(std::move(conn_ptr));
+		} else {
+			std::cerr << "unable to accept connection" << std::endl;
+			return -1;
+		}
+	}
+
 	std::cerr << "failure-detector listening on " << addr_str << std::endl;
 	return 0;
+}
+
+void
+on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
+	std::cerr << "accepted a new connection" << std::endl;
 }
