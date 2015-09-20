@@ -7,11 +7,12 @@
 #include <cpl/tcp_connection.hpp>
 
 #include "flags.hpp"
+#include "peer.hpp"
 
 const char* NAME    = "failure-detector";
 const char* VERSION = "0.0.1";
 
-void on_accept(std::unique_ptr<cpl::net::TCP_Connection>);
+void on_accept(std::vector<std::unique_ptr<Peer>>&, std::unique_ptr<cpl::net::TCP_Connection>);
 
 int
 main(int argc, char* argv[]) {
@@ -46,10 +47,11 @@ main(int argc, char* argv[]) {
 		exit(1);
 	}
 
+	std::vector<std::unique_ptr<Peer>> peers;
 	while (true) {
 		auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 		if (sock.accept(conn_ptr.get()) == 0) {
-			on_accept(std::move(conn_ptr));
+			on_accept(peers, std::move(conn_ptr));
 		} else {
 			std::cerr << "unable to accept connection" << std::endl;
 			return -1;
@@ -61,6 +63,9 @@ main(int argc, char* argv[]) {
 }
 
 void
-on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
+on_accept(std::vector<std::unique_ptr<Peer>>& peers, std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 	std::cerr << "accepted a new connection" << std::endl;
+	auto peer = std::make_unique<Peer>(std::move(conn_ptr));
+	peer->run();
+	peers.push_back(std::move(peer));
 }

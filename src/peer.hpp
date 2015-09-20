@@ -1,17 +1,29 @@
 #pragma once
 
-#include <cpl/include/sockaddr.hpp>
+#include <memory>
+#include <thread>
+#include <iostream>
+
+#include <cpl/tcp_connection.hpp>
+
+#include "message.hpp"
 
 class Peer
 {
 public:
-	Peer(std::string address_string)
+	Peer(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr)
+	: conn_ptr(std::move(conn_ptr))
 	{
-		address.parse(address_string);
 	}
 
-	cpl::net::SockAddr address;
+	void run() {
+		thread = std::make_unique<std::thread>(&Peer::read_packets, this);
+	}
 
 private:
+	std::unique_ptr<cpl::net::TCP_Connection> conn_ptr;
+	std::unique_ptr<std::thread> thread;
+
+	void read_packets();
 
 }; // Peer
