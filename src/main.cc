@@ -7,6 +7,7 @@
 #include <cpl/tcp_connection.hpp>
 
 #include "flags.hpp"
+#include "node.hpp"
 #include "peer.hpp"
 
 const char* NAME    = "failure-detector";
@@ -28,44 +29,14 @@ main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	cpl::net::SockAddr addr;
-	if (addr.parse(addr_str) < 0) {
-		std::cerr << "`" + addr_str + "`" << " is not a valid address." << std::endl;
+	auto node = std::make_shared<Node>();
+	int status = node->start(addr_str);
+	if (status < 0) {
+		std::cerr << "failed to start failure-detector" << std::endl;
 		return 1;
 	}
 
-	cpl::net::TCP_Socket sock;
-	int status;
-	status = sock.bind(addr);
-	if (status < 0) {
-		std::cerr << "unable to bind to " << addr_str << " (status " << status << ")" << std::endl;
-		exit(1);
-	}
-	status = sock.listen();
-	if (status < 0) {
-		std::cerr << "unable to listen on " << addr_str << std::endl;
-		exit(1);
-	}
-
-	std::vector<std::unique_ptr<Peer>> peers;
-	while (true) {
-		auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
-		if (sock.accept(conn_ptr.get()) == 0) {
-			on_accept(peers, std::move(conn_ptr));
-		} else {
-			std::cerr << "unable to accept connection" << std::endl;
-			return -1;
-		}
-	}
-
 	std::cerr << "failure-detector listening on " << addr_str << std::endl;
+	node->run();
 	return 0;
-}
-
-void
-on_accept(std::vector<std::unique_ptr<Peer>>& peers, std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
-	std::cerr << "accepted a new connection" << std::endl;
-	auto peer = std::make_unique<Peer>(std::move(conn_ptr));
-	peer->run();
-	peers.push_back(std::move(peer));
 }

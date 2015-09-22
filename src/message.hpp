@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <cstdint>
 
 #include "encoding.h"
@@ -13,20 +14,22 @@ enum MESSAGE_TYPE
 
 struct Message
 {
-	uint8_t  type;
-	uint32_t length;
-	uint8_t* data;
+	uint8_t     type;
+	std::string data;
 
 	Message()
-	: type(0), length(0), data(nullptr)
+	: type(0), data("")
 	{
 	}
 
-	Message(uint8_t type, const char* msg_data, uint32_t length)
-	: type(type), length(length)
+	Message(uint8_t type, std::string data)
+	: type(type), data(data)
 	{
-		data = new uint8_t[length];
-		memcpy((void*)data, (void*)msg_data, length);
+	}
+
+	Message(uint8_t type, const char* data)
+	: type(type), data(data)
+	{
 	}
 
 	int
@@ -34,11 +37,4 @@ struct Message
 
 	int
 	unpack(uint8_t* src, int src_len);
-
-	~Message()
-	{
-		if (data != nullptr) {
-			delete[] data;
-		}
-	}
 };

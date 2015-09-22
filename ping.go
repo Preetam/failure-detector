@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"time"
 )
 
 func main() {
@@ -10,9 +11,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	conn.Write([]byte{0x1, 0x3, 0x0, 0x0, 0x0, 'f', 'o', 'o'})
 	var buf [100]byte
-	b := buf[:]
-	conn.Read(b)
-	log.Println(b)
+
+	for _ = range time.Tick(time.Second) {
+		conn.Write([]byte{0x1, 0x3, 0x0, 0x0, 0x0, 'f', 'o', 'o'})
+		b := buf[:]
+		conn.Read(b)
+		log.Println(b)
+	}
 }
