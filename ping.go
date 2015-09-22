@@ -14,9 +14,15 @@ func main() {
 	var buf [100]byte
 
 	for _ = range time.Tick(time.Second) {
-		conn.Write([]byte{0x1, 0x3, 0x0, 0x0, 0x0, 'f', 'o', 'o'})
+		_, err := conn.Write([]byte{0x1, 0x3, 0x0, 0x0, 0x0, 'f', 'o', 'o'})
+		if err != nil {
+			return
+		}
 		b := buf[:]
-		conn.Read(b)
+		_, err = conn.Read(b)
+		if err != nil {
+			return
+		}
 		log.Println(b)
 	}
 }
