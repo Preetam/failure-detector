@@ -17,7 +17,7 @@ test/%.o: test/%.cc $(INCL)
 	$(CXX) $(CXXFLAGS) -std=c++14 -fPIC -c -o $@ $<
 
 build/failure-detector: prepare $(OBJ)
-	$(CXX) -fPIC -o $@ $(OBJ)
+	$(CXX) -fPIC -o $@ $(OBJ) $(LD_FLAGS)
 
 build/test: $(TEST_OBJ)
 	$(CXX) -o $@ $(TEST_OBJ) $(LD_FLAGS)
