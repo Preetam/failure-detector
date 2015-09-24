@@ -22,19 +22,13 @@ public:
 	}
 
 	void run() {
-		thread = std::make_unique<std::thread>(&Peer::read_packets, this);
-	}
-
-	~Peer()
-	{
-		thread->join();
+		read_packets();
 	}
 
 	int id;
 
 private:
 	std::unique_ptr<cpl::net::TCP_Connection> conn_ptr;
-	std::unique_ptr<std::thread> thread;
 	void read_packets();
 	std::packaged_task<void(int)> on_close_callback;
 
