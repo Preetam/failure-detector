@@ -4,16 +4,17 @@ OBJ      := ${SRC:.cc=.o}
 TEST_OBJ := test/_test.o test/encoding_test.o test/message_test.o \
             src/message.o src/peer.o
 INCL     := ${shell find ./include}
+INCL     += ${shell find ./src -name *.hpp}
 
 CXXFLAGS = -std=c++14 -I./src -I./include -fPIC
 LD_FLAGS = -L./build -lpthread
 
 all: prepare build/failure-detector build/test
 
-src/%.o: src/%.cc $(INCL)
+src/%.o: src/%.cc src/%.hpp
 	$(CXX) $(CXXFLAGS) -std=c++14 -fPIC -c -o $@ $<
 
-test/%.o: test/%.cc $(INCL)
+test/%.o: test/%.cc test/%.hpp
 	$(CXX) $(CXXFLAGS) -std=c++14 -fPIC -c -o $@ $<
 
 build/failure-detector: prepare $(OBJ)
