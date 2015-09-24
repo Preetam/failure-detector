@@ -52,13 +52,11 @@ private:
 	{
 		auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr),
 			std::packaged_task<void(int)>([this](int id) {
-			std::cerr << "connection " << id << " closed." << std::endl;
 			peers->erase(id);
 		}));
 		threads.push_back(std::make_unique<std::thread>([peer]() {
 			peer->run();
 		}));
-		std::cerr << "asdf" << std::endl;
 		peers->insert({id_counter, peer});
 	}
 
