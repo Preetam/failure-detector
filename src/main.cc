@@ -8,12 +8,9 @@
 
 #include "flags.hpp"
 #include "node.hpp"
-#include "peer.hpp"
 
 const char* NAME    = "failure-detector";
 const char* VERSION = "0.0.1";
-
-void on_accept(std::vector<std::unique_ptr<Peer>>&, std::unique_ptr<cpl::net::TCP_Connection>);
 
 int
 main(int argc, char* argv[]) {

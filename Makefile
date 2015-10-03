@@ -1,8 +1,11 @@
 SRC      := ${shell find ./src -name *.cc}
 TEST_SRC := ${shell find ./test -name *.cc}
 OBJ      := ${SRC:.cc=.o}
-TEST_OBJ := test/_test.o test/encoding_test.o test/message_test.o \
-            src/message.o src/peer.o
+TEST_OBJ := test/_test.o \
+            test/encoding_test.o \
+            test/message_test.o \
+            src/message.o
+
 INCL     := ${shell find ./include}
 INCL     += ${shell find ./src -name *.hpp}
 
