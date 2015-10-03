@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <future>
 
-#include <cpl/tcp_socket.hpp>
+#include <cpl/net/tcp_socket.hpp>
 
 #include "peer.hpp"
 

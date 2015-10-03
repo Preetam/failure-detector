@@ -2,9 +2,9 @@
 #include <string>
 
 #include <cpl/flags.hpp>
-#include <cpl/sockaddr.hpp>
-#include <cpl/tcp_socket.hpp>
-#include <cpl/tcp_connection.hpp>
+#include <cpl/net/sockaddr.hpp>
+#include <cpl/net/tcp_socket.hpp>
+#include <cpl/net/tcp_connection.hpp>
 
 #include "flags.hpp"
 #include "node.hpp"

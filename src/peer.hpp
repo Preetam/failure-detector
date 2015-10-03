@@ -4,7 +4,7 @@
 #include <iostream>
 #include <future>
 
-#include <cpl/tcp_connection.hpp>
+#include <cpl/net/tcp_connection.hpp>
 
 #include "message.hpp"
 

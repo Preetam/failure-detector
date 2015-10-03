@@ -10,7 +10,7 @@
 #include <cpl/flags.hpp>
 
 // cpl::net::IP
-#include <cpl/ip.hpp>
+#include <cpl/net/ip.hpp>
 
 void
 show_help(std::string a, std::string b, void* d) {
