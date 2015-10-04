@@ -31,8 +31,7 @@ prepare:
 
 clean:
 	rm -rf ./build
-	rm src/*.o
-	rm test/*.o
+	find . -name *.o | xargs rm
 
 test: prepare build/test
 	LD_LIBRARY_PATH=./build ./build/test

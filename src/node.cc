@@ -8,11 +8,11 @@ Node :: start(std::string address) {
 	if (status < 0) {
 		return status;
 	}
-	status = _sock.bind(addr);
+	status = sock.bind(addr);
 	if (status < 0) {
 		return status;
 	}
-	status = _sock.listen();
+	status = sock.listen();
 	if (status < 0) {
 		return status;
 	}
@@ -23,14 +23,14 @@ void
 Node :: run() {
 	while (true) {
 		auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
-		if (_sock.accept(conn_ptr.get()) == 0) {
+		if (sock.accept(conn_ptr.get()) == 0) {
 			on_accept(std::move(conn_ptr));
-		} else {
 		}
 	}
 }
 
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
-
+	auto peer = std::make_unique<Peer>(std::move(conn_ptr), mq);
+	peers->push_back(std::move(peer));
 }

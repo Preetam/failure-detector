@@ -1,4 +1,3 @@
 failure-detector
 build/
-src/*.o
-test/*.o
+*.o

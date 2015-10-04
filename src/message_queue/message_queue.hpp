@@ -18,27 +18,13 @@ public:
 	Message_Queue& operator =(const Message_Queue&) = delete;
 
 	Message
-	pop()
-	{
-		std::unique_lock<std::mutex> _(_mutex);
-		_cv.wait(_, [this]() {
-			return _queue.size() > 0;
-		});
-		Message m = _queue.front();
-		_queue.pop();
-		return m;
-	}
+	pop();
 
 	void
-	push(Message m)
-	{
-		std::unique_lock<std::mutex> _(_mutex);
-		_queue.push(m);
-		_cv.notify_one();
-	}
+	push(Message m);
 
 private:
-	std::mutex _mutex;
-	std::condition_variable _cv;
-	std::queue<Message> _queue;
-};
+	std::mutex mutex;
+	std::condition_variable cv;
+	std::queue<Message> queue;
+}; // Message_Queue
