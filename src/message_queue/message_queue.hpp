@@ -21,12 +21,14 @@ public:
 	Message
 	pop();
 
-	template <class R, class P>
 	bool
-	pop_with_timeout(Message*, std::chrono::duration<R,P>);
+	pop_with_timeout(Message*, int);
 
 	void
 	push(Message m);
+
+	size_t
+	size();
 
 private:
 	std::mutex mutex;

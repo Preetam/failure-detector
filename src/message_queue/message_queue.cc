@@ -11,11 +11,11 @@ Message_Queue :: pop() {
 	return m;
 }
 
-template <class R, class P>
 bool
-Message_Queue :: pop_with_timeout(Message* m, std::chrono::duration<R,P> d) {
+Message_Queue :: pop_with_timeout(Message* m, int milliseconds) {
 	std::unique_lock<std::mutex> lk(mutex);
-	if (cv.wait_for(lk, d, [this]() { return queue.size() > 0; })) {
+	if (cv.wait_for(lk, std::chrono::milliseconds((long)milliseconds),
+		[this]() { return queue.size() > 0; })) {
 		Message message = queue.front();
 		queue.pop();
 		*m = message;
@@ -30,4 +30,10 @@ Message_Queue :: push(Message m) {
 	std::unique_lock<std::mutex> lk(mutex);
 	queue.push(m);
 	cv.notify_one();
+}
+
+size_t
+Message_Queue :: size() {
+	std::unique_lock<std::mutex> lk(mutex);
+	return queue.size();
 }

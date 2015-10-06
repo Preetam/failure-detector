@@ -1,4 +1,0 @@
-src/main.cc
-src/message.cc
-src/message_queue/message_queue.cc
-src/node.cc

@@ -16,6 +16,7 @@ struct Message
 {
 	uint8_t     type;
 	std::string data;
+	int         source;
 
 	Message()
 	: type(0), data("")

@@ -13,10 +13,12 @@
 class Peer
 {
 public:
-	Peer(std::unique_ptr<cpl::net::TCP_Connection> conn,
-		std::shared_ptr<Message_Queue> mq,
-		std::shared_ptr<cpl::Semaphore> close_notify_sem)
-	: conn(std::move(conn)),
+	Peer(int id,
+		 std::unique_ptr<cpl::net::TCP_Connection> conn,
+		 std::shared_ptr<Message_Queue> mq,
+		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
+	: id(id),
+	  conn(std::move(conn)),
 	  mq(mq), active(true),
 	  close_notify_sem(close_notify_sem)
 	{
@@ -25,6 +27,9 @@ public:
 			read_messages();
 		});
 	}
+
+	void
+	send(Message);
 
 	bool
 	is_active()
@@ -37,6 +42,9 @@ public:
 		thread->join();
 	}
 
+public:
+	int id;
+
 private:
 	std::unique_ptr<cpl::net::TCP_Connection> conn;
 	std::unique_ptr<std::thread> thread;
@@ -45,26 +53,5 @@ private:
 	std::atomic<bool> active;
 
 	void
-	read_messages() {
-		while (true) {
-			uint8_t buf[16000];
-			Message m;
-			int len = conn->recv(buf, 16000, 0);
-			if (len <= 0) {
-				if (errno == EAGAIN || errno == EWOULDBLOCK) {
-					continue;
-				}
-				break;
-			}
-			int status = m.unpack(buf, len);
-			if (status != 0) {
-				std::cerr << "message unpack status: " << status << std::endl;
-				break;
-			}
-			mq->push(m);
-		}
-		std::cerr << "read_messages() ending" << std::endl;
-		active = false;
-		close_notify_sem->release();
-	}
+	read_messages();
 }; // Peer
