@@ -5,6 +5,7 @@
 #include <memory>
 #include <cerrno>
 
+#include <cpl/net/sockaddr.hpp>
 #include <cpl/net/tcp_socket.hpp>
 #include <cpl/semaphore.hpp>
 #include <cpl/mutex.hpp>
@@ -29,6 +30,9 @@ public:
 	  close_notify_sem(std::make_shared<cpl::Semaphore>(0))
 	{
 	}
+
+	void
+	connect_to_peer(cpl::net::SockAddr);
 
 private:
 	void

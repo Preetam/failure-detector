@@ -12,6 +12,9 @@
 // cpl::net::IP
 #include <cpl/net/ip.hpp>
 
+// cpl::net::SockAddr
+#include <cpl/net/sockaddr.hpp>
+
 void
 show_help(std::string a, std::string b, void* d) {
 	auto flags = reinterpret_cast<cpl::Flags*>(d);
@@ -27,16 +30,18 @@ set_listen_string(std::string a, std::string b, void* d) {
 
 void
 add_peers(std::string a, std::string b, void* d) {
-	auto peers = reinterpret_cast<std::vector<std::string>*>(d);
+	auto peers = reinterpret_cast<std::vector<cpl::net::SockAddr>*>(d);
 
 	std::istringstream ss(b);
 	std::string token;
 
 	while (std::getline(ss, token, ',')) {
-		peers->push_back(token);
-	}
-
-	for (auto p: *peers) {
-		std::cout << "added peer: " << p << std::endl;
+		cpl::net::SockAddr addr;
+		int status = addr.parse(token);
+		if (status < 0) {
+			std::cerr << "`" << token << "'" << " is not a valid peer address" << std::endl;
+			continue;
+		}
+		peers->push_back(addr);
 	}
 }

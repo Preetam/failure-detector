@@ -23,6 +23,20 @@ Node :: start(std::string address) {
 }
 
 void
+Node :: connect_to_peer(cpl::net::SockAddr address) {
+	auto peer_conn = std::make_unique<cpl::net::TCP_Connection>();
+	int status = peer_conn->connect(address);
+	if (status < 0) {
+		std::cerr << "unable to connect to " << address << std::endl;
+		return;
+	}
+	auto peer = std::make_shared<Peer>(id_counter++, std::move(peer_conn), mq, close_notify_sem);
+	peers_lock->lock();
+	peers->push_back(std::move(peer));
+	peers_lock->unlock();
+}
+
+void
 Node :: run() {
 	std::thread cleanup([this]() {
 		cleanup_nodes();
