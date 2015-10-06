@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <mutex>
 #include <condition_variable>
 #include <queue>
@@ -19,6 +20,10 @@ public:
 
 	Message
 	pop();
+
+	template <class R, class P>
+	bool
+	pop_with_timeout(Message*, std::chrono::duration<R,P>);
 
 	void
 	push(Message m);
