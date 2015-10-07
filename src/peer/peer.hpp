@@ -28,9 +28,11 @@ public:
 		});
 	}
 
+	// send sends a Message to the Peer.
 	void
 	send(Message);
 
+	// is_active returns true if the Peer is still active.
 	bool
 	is_active()
 	{

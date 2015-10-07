@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cstring>
 
-#include "encoding.h"
+#include "message/encoding.h"
 
 TEST_CASE("encoding", "[encoding]") {
 	uint8_t data[4];

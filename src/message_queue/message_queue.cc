@@ -3,6 +3,7 @@
 Message
 Message_Queue :: pop() {
 	std::unique_lock<std::mutex> lk(mutex);
+	// Wait until there is a message.
 	cv.wait(lk, [this]() {
 		return queue.size() > 0;
 	});
@@ -14,6 +15,7 @@ Message_Queue :: pop() {
 bool
 Message_Queue :: pop_with_timeout(Message* m, int milliseconds) {
 	std::unique_lock<std::mutex> lk(mutex);
+	// Wait until there is a message or we timeout.
 	if (cv.wait_for(lk, std::chrono::milliseconds((long)milliseconds),
 		[this]() { return queue.size() > 0; })) {
 		Message message = queue.front();

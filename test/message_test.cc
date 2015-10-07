@@ -2,7 +2,7 @@
 #include <cstring>
 #include <string>
 
-#include "message.hpp"
+#include "message/message.hpp"
 
 TEST_CASE("message", "[message]") {
 	std::string data("\x01\x02\x03\x04");
