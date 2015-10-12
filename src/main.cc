@@ -18,12 +18,14 @@ main(int argc, char* argv[]) {
 	std::string addr_str;
 	// Peers to initially connect to
 	std::vector<cpl::net::SockAddr> peer_addrs;
+	int id;
 
 	// Flags
 	cpl::Flags flags(NAME, VERSION);
 	flags.add_option("--help", "-h", "show help documentation", show_help, &flags);
 	flags.add_option("--listen", "-l", "set listen address", set_listen_string, &addr_str);
 	flags.add_option("--peers", "-p", "list of peers", add_peers, &peer_addrs);
+	flags.add_option("--id", "-i", "ID, unique among the cluster", set_id, &id);
 	flags.parse(argc, argv);
 
 	// Check required flags
@@ -44,6 +46,7 @@ main(int argc, char* argv[]) {
 	}
 
 	std::cerr << "failure-detector listening on " << addr_str << std::endl;
+	std::cerr << "local ID is " << id << std::endl;
 	node->run();
 	// Unreachable
 	return 0;

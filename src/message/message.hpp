@@ -7,9 +7,21 @@
 
 enum MESSAGE_TYPE
 {
+	// Invalid
 	MSG_INVALID,
+	// Ping
 	MSG_PING,
-	MSG_PONG
+	// Ping response (pong)
+	MSG_PONG,
+	// Identification request
+	MSG_IDENT_REQUEST,
+	// Identification
+	MSG_IDENT,
+	// Suspected node
+	MSG_SUSPECT,
+	// Still alive message (in
+	// response to MSG_SUSPECT)
+	MSG_STILL_ALIVE
 };
 
 struct Message

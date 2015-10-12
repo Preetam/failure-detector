@@ -29,6 +29,12 @@ set_listen_string(std::string a, std::string b, void* d) {
 }
 
 void
+set_id(std::string a, std::string b, void* d) {
+	auto id = reinterpret_cast<int*>(d);
+	*id = atoi(b.c_str());
+}
+
+void
 add_peers(std::string a, std::string b, void* d) {
 	auto peers = reinterpret_cast<std::vector<cpl::net::SockAddr>*>(d);
 

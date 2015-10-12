@@ -1,6 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void write8be(uint8_t, uint8_t*);
 void write16be(uint16_t, uint8_t*);
@@ -109,3 +113,7 @@ read64be(uint8_t* src) {
 	v |= uint64_t(*src) << (8*7);
 	return v;
 }
+
+#ifdef __cplusplus
+}
+#endif
