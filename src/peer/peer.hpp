@@ -41,6 +41,7 @@ public:
 
 	~Peer()
 	{
+		std::cerr << "peer disconnected" << std::endl;
 		thread->join();
 	}
 

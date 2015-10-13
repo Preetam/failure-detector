@@ -41,6 +41,11 @@ public:
 	connect_to_peer(cpl::net::SockAddr);
 
 private:
+	// process_message processes a single message in the inbound
+	// message queue. This function blocks up to 33 milliseconds.
+	void
+	process_message();
+
 	// cleanup_nodes runs in a separate thread to clean up
 	// disconnected Peer instances.
 	void
