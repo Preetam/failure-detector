@@ -1,26 +1,26 @@
 #include "message_queue.hpp"
 
-Message
+unique_message
 Message_Queue :: pop() {
 	std::unique_lock<std::mutex> lk(mutex);
 	// Wait until there is a message.
 	cv.wait(lk, [this]() {
 		return queue.size() > 0;
 	});
-	Message m = queue.front();
+	unique_message m = std::move(queue.front());
 	queue.pop();
-	return m;
+	return std::move(m);
 }
 
 bool
-Message_Queue :: pop_with_timeout(Message* m, int milliseconds) {
+Message_Queue :: pop_with_timeout(unique_message& m, int milliseconds) {
 	std::unique_lock<std::mutex> lk(mutex);
 	// Wait until there is a message or we timeout.
 	if (cv.wait_for(lk, std::chrono::milliseconds((long)milliseconds),
 		[this]() { return queue.size() > 0; })) {
-		Message message = queue.front();
+		unique_message message = std::move(queue.front());
 		queue.pop();
-		*m = message;
+		m.swap(message);
 		return true;
 	}
 	// Timed out
@@ -28,9 +28,9 @@ Message_Queue :: pop_with_timeout(Message* m, int milliseconds) {
 }
 
 void
-Message_Queue :: push(Message m) {
+Message_Queue :: push(unique_message m) {
 	std::unique_lock<std::mutex> lk(mutex);
-	queue.push(m);
+	queue.push(std::move(m));
 	cv.notify_one();
 }
 

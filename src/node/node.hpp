@@ -72,4 +72,7 @@ private:
 	// close_notify_sem notifies the cleanup thread
 	// whenever a Peer connection closes.
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
+
+private:
+	void handle_ping(const Message*);
 };

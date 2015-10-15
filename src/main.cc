@@ -41,11 +41,11 @@ main(int argc, char* argv[]) {
 	}
 	int status = node->start(addr_str);
 	if (status < 0) {
-		std::cerr << "failed to start failure-detector" << std::endl;
+		std::cerr << "failed to start " << NAME << std::endl;
 		return 1;
 	}
 
-	std::cerr << "failure-detector listening on " << addr_str << std::endl;
+	std::cerr << NAME << " " << VERSION << " listening on " << addr_str << std::endl;
 	std::cerr << "local ID is " << id << std::endl;
 	node->run();
 	// Unreachable
