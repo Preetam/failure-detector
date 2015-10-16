@@ -26,8 +26,9 @@ public:
 	// run starts the main processing routine.
 	void run();
 
-	Node()
-	: id_counter(1),
+	Node(uint64_t id)
+	: id(id),
+	  id_counter(1),
 	  mq(std::make_shared<Message_Queue>()),
 	  peers_lock(std::make_shared<cpl::Mutex>()),
 	  peers(std::make_shared<std::vector<shared_peer>>()),
@@ -41,6 +42,9 @@ public:
 	connect_to_peer(cpl::net::SockAddr);
 
 private:
+	uint64_t id;
+	std::string listen_address;
+
 	// process_message processes a single message in the inbound
 	// message queue. This function blocks up to 33 milliseconds.
 	void
