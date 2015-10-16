@@ -24,24 +24,27 @@ enum MESSAGE_TYPE
 	MSG_STILL_ALIVE
 };
 
-struct Message
+enum MESSAGE_FLAG
 {
-	uint8_t     type;
-	std::string data;
-	int         source;
+	FLAG_BCAST  = 1 << 0,
+	FLAG_RBCAST = 1 << 1
+};
 
+class Message
+{
+public:
 	Message()
-	: type(0), data("")
+	: type(MSG_INVALID)
 	{
 	}
 
-	Message(uint8_t type, std::string data)
-	: type(type), data(data)
+	Message(uint8_t type)
+	: type(type)
 	{
 	}
 
-	Message(uint8_t type, const char* data)
-	: type(type), data(data)
+	Message(uint8_t type, uint8_t flags)
+	: type(type), flags(flags)
 	{
 	}
 
@@ -50,4 +53,34 @@ struct Message
 
 	int
 	unpack(uint8_t* src, int src_len);
+
+	inline bool
+	broadcast()
+	{
+		return flags & (FLAG_BCAST|FLAG_RBCAST);
+	}
+
+	inline bool
+	rbroadcast()
+	{
+		return flags & FLAG_RBCAST;
+	}
+
+	// Virtual methods to override
+	virtual int
+	body_size()
+	{
+		return 0;
+	}
+
+	virtual int
+	pack_body(uint8_t* dest, int dest_len) = 0;
+
+	virtual int
+	unpack_body(uint8_t* src, int src_len) = 0;
+
+public:
+	int source;
+	uint8_t type;
+	uint8_t flags;
 };

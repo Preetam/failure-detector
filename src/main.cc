@@ -18,7 +18,7 @@ main(int argc, char* argv[]) {
 	std::string addr_str;
 	// Peers to initially connect to
 	std::vector<cpl::net::SockAddr> peer_addrs;
-	int id;
+	uint64_t id;
 
 	// Flags
 	cpl::Flags flags(NAME, VERSION);
@@ -34,18 +34,18 @@ main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	auto node = std::make_shared<Node>();
+	auto node = std::make_shared<Node>(id);
 	// Connect to each specified peer
 	for (int i = 0; i < peer_addrs.size(); i++) {
 		node->connect_to_peer(peer_addrs[i]);
 	}
 	int status = node->start(addr_str);
 	if (status < 0) {
-		std::cerr << "failed to start failure-detector" << std::endl;
+		std::cerr << "failed to start " << NAME << std::endl;
 		return 1;
 	}
 
-	std::cerr << "failure-detector listening on " << addr_str << std::endl;
+	std::cerr << NAME << " " << VERSION << " listening on " << addr_str << std::endl;
 	std::cerr << "local ID is " << id << std::endl;
 	node->run();
 	// Unreachable

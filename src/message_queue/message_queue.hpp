@@ -8,6 +8,8 @@
 
 #include "../message/message.hpp"
 
+using unique_message = std::unique_ptr<Message>;
+
 class Message_Queue
 {
 public:
@@ -22,7 +24,7 @@ public:
 	// pop removes the first element of the queue.
 	// If the queue is empty, this function blocks until
 	// there is a new element.
-	Message
+	unique_message
 	pop();
 
 	// pop_with_timeout removes the first element of the queue.
@@ -30,11 +32,11 @@ public:
 	// milliseconds), this function returns false and the
 	// Message pointer is unchanged.
 	bool
-	pop_with_timeout(Message*, int);
+	pop_with_timeout(unique_message&, int);
 
 	// push inserts an element into the queue.
 	void
-	push(Message m);
+	push(unique_message m);
 
 	// size returns the size of the queue.
 	// Note that the size may have changed
@@ -45,5 +47,5 @@ public:
 private:
 	std::mutex mutex;
 	std::condition_variable cv;
-	std::queue<Message> queue;
+	std::queue<unique_message> queue;
 }; // Message_Queue

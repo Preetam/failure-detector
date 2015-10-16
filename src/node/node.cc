@@ -1,5 +1,6 @@
 #include "node.hpp"
 #include "../message/message.hpp"
+#include "../message/identity_message.hpp"
 
 #include <chrono>
 
@@ -19,6 +20,7 @@ Node :: start(std::string address) {
 	if (status < 0) {
 		return status;
 	}
+	listen_address = address;
 	return 0;
 }
 
@@ -88,6 +90,11 @@ Node :: handle_new_connections() {
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 	auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr), mq, close_notify_sem);
+
+	// Send our identity to the new peer.
+	auto m = std::make_unique<IdentityMessage>(id, listen_address);
+	peer->send(std::move(m));
+
 	peers_lock->lock();
 	peers->push_back(std::move(peer));
 	peers_lock->unlock();

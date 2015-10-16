@@ -30,7 +30,7 @@ public:
 
 	// send sends a Message to the Peer.
 	void
-	send(Message);
+	send(std::unique_ptr<Message>);
 
 	// is_active returns true if the Peer is still active.
 	bool
