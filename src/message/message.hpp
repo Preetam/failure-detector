@@ -24,6 +24,12 @@ enum MESSAGE_TYPE
 	MSG_STILL_ALIVE
 };
 
+enum MESSAGE_FLAG
+{
+	FLAG_BCAST  = 1 << 0,
+	FLAG_RBCAST = 1 << 1
+};
+
 class Message
 {
 public:
@@ -37,11 +43,28 @@ public:
 	{
 	}
 
+	Message(uint8_t type, uint8_t flags)
+	: type(type), flags(flags)
+	{
+	}
+
 	int
 	pack(uint8_t* dest, int dest_len);
 
 	int
 	unpack(uint8_t* src, int src_len);
+
+	inline bool
+	broadcast()
+	{
+		return flags & (FLAG_BCAST|FLAG_RBCAST);
+	}
+
+	inline bool
+	rbroadcast()
+	{
+		return flags & FLAG_RBCAST;
+	}
 
 	// Virtual methods to override
 	virtual int
@@ -59,4 +82,5 @@ public:
 public:
 	int source;
 	uint8_t type;
+	uint8_t flags;
 };

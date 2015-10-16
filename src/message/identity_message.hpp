@@ -5,6 +5,32 @@
 
 #include "message.hpp"
 
+class IdentityRequest : public Message
+{
+public:
+	IdentityRequest()
+	: Message(MSG_IDENT_REQUEST)
+	{
+	}
+
+	inline int
+	body_size()
+	{
+		return 0;
+	}
+
+	inline int
+	pack_body(uint8_t* dest, int dest_len) {
+		return 0;
+	}
+
+	inline int
+	unpack_body(uint8_t* src, int src_len)
+	{
+		return 0;
+	}
+};
+
 class IdentityMessage : public Message
 {
 public:
@@ -18,13 +44,13 @@ public:
 	{
 	}
 
-	int
+	inline int
 	body_size()
 	{
 		return 8 + 2 + address.size();
 	}
 
-	int
+	inline int
 	pack_body(uint8_t* dest, int dest_len) {
 		if (dest_len < 8 + 2 + address.size()) {
 			return -1;
@@ -37,7 +63,7 @@ public:
 		return 0;
 	}
 
-	int
+	inline int
 	unpack_body(uint8_t* src, int src_len)
 	{
 		if (src_len < 8 + 2) {
@@ -54,7 +80,7 @@ public:
 		return 0;
 	}
 
-private:
+public:
 	uint64_t id;
 	std::string address;
 };
