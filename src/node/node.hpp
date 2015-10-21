@@ -10,6 +10,7 @@
 #include <cpl/semaphore.hpp>
 #include <cpl/mutex.hpp>
 
+#include "../log.hpp"
 #include "message_queue/message_queue.hpp"
 #include "peer/peer.hpp"
 
@@ -79,4 +80,5 @@ private:
 
 private:
 	void handle_ping(const Message*);
+	void handle_ident(const Message*);
 };

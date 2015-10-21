@@ -1,13 +1,16 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net"
 	"time"
 )
 
 func main() {
-	conn, err := net.Dial("tcp", "127.0.0.1:2020")
+	address := flag.String("address", "127.0.0.1:2020", "address of failure-detector")
+	flag.Parse()
+	conn, err := net.Dial("tcp", *address)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,6 +26,6 @@ func main() {
 		if err != nil {
 			return
 		}
-		log.Println(b)
+		log.Println(string(b))
 	}
 }

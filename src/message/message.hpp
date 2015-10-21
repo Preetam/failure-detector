@@ -24,6 +24,20 @@ enum MESSAGE_TYPE
 	MSG_STILL_ALIVE
 };
 
+inline
+const char* MSG_STR(uint8_t type) {
+	switch (type) {
+	case MSG_PING: return "MSG_PING";
+	case MSG_PONG: return "MSG_PONG";
+	case MSG_IDENT_REQUEST: return "MSG_IDENT_REQUEST";
+	case MSG_IDENT: return "MSG_IDENT";
+	case MSG_SUSPECT: return "MSG_SUSPECT";
+	case MSG_STILL_ALIVE: return "MSG_STILL_ALIVE";
+	}
+
+	return "MSG_INVALID";
+}
+
 enum MESSAGE_FLAG
 {
 	FLAG_BCAST  = 1 << 0,

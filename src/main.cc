@@ -6,6 +6,7 @@
 #include <cpl/net/tcp_socket.hpp>
 #include <cpl/net/tcp_connection.hpp>
 
+#include "log.hpp"
 #include "flags.hpp"
 #include "node/node.hpp"
 
@@ -18,7 +19,7 @@ main(int argc, char* argv[]) {
 	std::string addr_str;
 	// Peers to initially connect to
 	std::vector<cpl::net::SockAddr> peer_addrs;
-	uint64_t id;
+	uint64_t id = 0;
 
 	// Flags
 	cpl::Flags flags(NAME, VERSION);
@@ -34,19 +35,24 @@ main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	auto node = std::make_shared<Node>(id);
-	// Connect to each specified peer
-	for (int i = 0; i < peer_addrs.size(); i++) {
-		node->connect_to_peer(peer_addrs[i]);
+	if (id == 0) {
+		std::cerr << "--id flag unset. Please specify a unique node ID." << std::endl;
+		return 1;
 	}
+
+	auto node = std::make_shared<Node>(id);
 	int status = node->start(addr_str);
 	if (status < 0) {
 		std::cerr << "failed to start " << NAME << std::endl;
 		return 1;
 	}
+	// Connect to each specified peer
+	for (int i = 0; i < peer_addrs.size(); i++) {
+		node->connect_to_peer(peer_addrs[i]);
+	}
 
 	std::cerr << NAME << " " << VERSION << " listening on " << addr_str << std::endl;
-	std::cerr << "local ID is " << id << std::endl;
+	LOG("local ID is " << id);
 	node->run();
 	// Unreachable
 	return 0;

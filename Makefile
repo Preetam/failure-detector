@@ -12,6 +12,9 @@ INCL     += ${shell find ./src -name *.hpp}
 CXXFLAGS = -std=c++14 -I./src -I./include -fPIC
 LD_FLAGS = -L./build -lpthread
 
+debug: CXXFLAGS += -DDEBUG -g
+debug: build/failure-detector
+
 all: prepare build/failure-detector build/test
 
 src/%.o: src/%.cc src/%.hpp

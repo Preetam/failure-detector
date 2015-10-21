@@ -3,6 +3,24 @@
 #include "../message/decode.hpp"
 
 void
+Peer :: reconnect() {
+	LOG("attempting to reconnect to " << address);
+	cpl::net::SockAddr addr;
+	int status = addr.parse(address);
+	if (status < 0) {
+		return;
+	}
+	auto new_connection = std::make_unique<cpl::net::TCP_Connection>();
+	status = new_connection->connect(addr);
+	if (status < 0) {
+		return;
+	}
+	conn = std::move(new_connection);
+	last_update = std::chrono::steady_clock::now();
+	active = true;
+}
+
+void
 Peer :: read_messages() {
 	while (true) {
 		uint8_t buf[16000];
@@ -22,8 +40,12 @@ Peer :: read_messages() {
 		if (status < 0) {
 			continue;
 		}
-		m->source = id;
+		m->source = index;
+		if (m->type == MSG_IDENT) {
+			valid = true;
+		}
 		mq->push(std::move(m));
+		last_update = std::chrono::steady_clock::now();
 	}
 	active = false;
 	close_notify_sem->release();
@@ -34,4 +56,5 @@ Peer :: send(std::unique_ptr<Message> m) {
 	uint8_t buf[16000];
 	int packed_size = m->pack(buf, 16000);
 	conn->send(buf, packed_size, 0);
+	last_update = std::chrono::steady_clock::now();
 }

@@ -1,6 +1,7 @@
 #include "node.hpp"
 #include "../message/message.hpp"
 #include "../message/identity_message.hpp"
+#include "../message/ping_pong_message.hpp"
 
 #include <chrono>
 
@@ -29,10 +30,14 @@ Node :: connect_to_peer(cpl::net::SockAddr address) {
 	auto peer_conn = std::make_unique<cpl::net::TCP_Connection>();
 	int status = peer_conn->connect(address);
 	if (status < 0) {
-		std::cerr << "unable to connect to " << address << std::endl;
+		LOG("unable to connect to " << address);
 		return;
 	}
 	auto peer = std::make_shared<Peer>(id_counter++, std::move(peer_conn), mq, close_notify_sem);
+	// Send our identity to the new peer.
+	auto m = std::make_unique<IdentityMessage>(id, listen_address);
+	peer->send(std::move(m));
+
 	peers_lock->lock();
 	peers->push_back(std::move(peer));
 	peers_lock->unlock();
@@ -50,6 +55,36 @@ Node :: run() {
 	while (true) {
 		// This is the main node loop.
 		process_message();
+
+		// Reconnection check.
+		peers_lock->lock();
+		for (int i = 0; i < peers->size(); i++) {
+			auto peer = (*peers)[i];
+			if (peer->is_valid() && !peer->is_active() &&
+				peer->ms_since_last_active() > 5000) {
+				// Attempt to reconnect.
+				peer->reconnect();
+			}
+		}
+		peers_lock->unlock();
+
+		// Pinging.
+		peers_lock->lock();
+		for (int i = 0; i < peers->size(); i++) {
+			auto peer = (*peers)[i];
+			LOG(peer->address << " was last active " << peer->ms_since_last_active() << " ms ago");
+			if (peer->is_valid() && peer->is_active() &&
+				peer->ms_since_last_active() > 1000) {
+				LOG("sending a ping to " << peer->address);
+				auto ping = std::make_unique<PingMessage>();
+				peer->send(std::move(ping));
+			}
+
+			if (peer->ms_since_last_active() > 2000) {
+				LOG(peer->address << " has not been active for over 2 sec.");
+			}
+		}
+		peers_lock->unlock();
 	}
 }
 
@@ -59,9 +94,10 @@ Node :: cleanup_nodes() {
 		close_notify_sem->acquire();
 		peers_lock->lock();
 		for (int i = 0; i < peers->size(); i++) {
-			if (!(*peers)[i]->is_active()) {
+			if (!(*peers)[i]->is_valid()) {
 				peers->erase(peers->begin()+i);
 				i--;
+				LOG("erasing invalid peer");
 			}
 		}
 		peers_lock->unlock();
