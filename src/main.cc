@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <iostream>
 #include <string>
 
@@ -15,6 +16,9 @@ const char* VERSION = "0.0.1";
 
 int
 main(int argc, char* argv[]) {
+	// Ignore SIGPIPE
+	signal(SIGPIPE, SIG_IGN);
+
 	// Local listen address
 	std::string addr_str;
 	// Peers to initially connect to
@@ -54,6 +58,7 @@ main(int argc, char* argv[]) {
 	std::cerr << NAME << " " << VERSION << " listening on " << addr_str << std::endl;
 	LOG("Unique ID is " << id);
 	node->run();
+
 	// Unreachable
 	return 0;
 }

@@ -63,6 +63,7 @@ Node :: run() {
 			if (peer->is_valid() && !peer->is_active() &&
 				peer->ms_since_last_active() > 5000) {
 				// Attempt to reconnect.
+				LOG("reconnecting to " << peer->address);
 				peer->reconnect();
 			}
 		}

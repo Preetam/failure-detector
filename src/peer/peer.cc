@@ -66,6 +66,10 @@ void
 Peer :: send(std::unique_ptr<Message> m) {
 	uint8_t buf[16000];
 	int packed_size = m->pack(buf, 16000);
-	conn->send(buf, packed_size, 0);
-	last_update = std::chrono::steady_clock::now();
+	int status = conn->send(buf, packed_size, 0);
+	if (status > 0) {
+		last_update = std::chrono::steady_clock::now();
+	} else {
+		active = false;
+	}
 }
