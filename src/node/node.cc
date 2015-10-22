@@ -136,3 +136,26 @@ Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 	peers_lock->unlock();
 	id_counter++;
 }
+
+bool
+Node :: is_peered(uint64_t peer_id) {
+	for (int i = 0; i < peers->size(); i++) {
+		auto peer = (*peers)[i];
+		if (peer->is_valid() && peer->unique_id == peer_id) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool
+Node :: is_active(uint64_t peer_id) {
+	for (int i = 0; i < peers->size(); i++) {
+		auto peer = (*peers)[i];
+		if (peer->is_valid() &&
+			peer->is_active() && peer->unique_id == peer_id) {
+			return true;
+		}
+	}
+	return false;
+}

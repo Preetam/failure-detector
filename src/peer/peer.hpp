@@ -21,7 +21,7 @@ public:
 		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
 	: local_id(local_id), unique_id(0), address(""),
 	  conn(std::move(conn)),
-	  mq(mq), active(true), valid(false),
+	  mq(mq), active(true), valid(false), run_listener(true),
 	  close_notify_sem(close_notify_sem),
 	  last_update(std::chrono::steady_clock::now())
 	{
@@ -57,6 +57,33 @@ public:
 	}
 
 	void
+	stop()
+	{
+		run_listener = false;
+		thread->join();
+		thread = nullptr;
+	}
+
+	std::unique_ptr<cpl::net::TCP_Connection>
+	get_conn()
+	{
+		valid = false;
+		active = false;
+		return std::move(conn);
+	}
+
+	void
+	update_conn(std::unique_ptr<cpl::net::TCP_Connection> new_connection)
+	{
+		conn = std::move(new_connection);
+		last_update = std::chrono::steady_clock::now();
+		thread = std::make_unique<std::thread>([this]() {
+			read_messages();
+		});
+		active = true;
+	}
+
+	void
 	reconnect();
 
 	~Peer()
@@ -77,6 +104,7 @@ private:
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
 	std::atomic<bool> active;
 	std::atomic<bool> valid;
+	std::atomic<bool> run_listener;
 	std::chrono::time_point<std::chrono::steady_clock> last_update;
 
 	void

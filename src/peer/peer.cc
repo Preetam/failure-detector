@@ -29,7 +29,7 @@ Peer :: reconnect() {
 
 void
 Peer :: read_messages() {
-	while (true) {
+	while (run_listener) {
 		uint8_t buf[16000];
 		std::unique_ptr<Message> m;
 		int len = conn->recv(buf, 16000, 0);
@@ -54,8 +54,12 @@ Peer :: read_messages() {
 		mq->push(std::move(m));
 		last_update = std::chrono::steady_clock::now();
 	}
-	active = false;
-	close_notify_sem->release();
+
+	if (!run_listener) {
+		// We weren't signaled to stop listening.
+		active = false;
+		close_notify_sem->release();
+	}
 }
 
 void

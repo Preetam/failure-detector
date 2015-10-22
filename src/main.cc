@@ -52,7 +52,7 @@ main(int argc, char* argv[]) {
 	}
 
 	std::cerr << NAME << " " << VERSION << " listening on " << addr_str << std::endl;
-	LOG("local ID is " << id);
+	LOG("Unique ID is " << id);
 	node->run();
 	// Unreachable
 	return 0;

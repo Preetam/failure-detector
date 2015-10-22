@@ -50,6 +50,33 @@ void
 Node :: handle_ident(const Message* m) {
 	auto ident_msg = static_cast<const IdentityMessage*>(m);
 	LOG("got an identity message from " << ident_msg->address << " source " << ident_msg->source);
+	uint64_t peer_id = ident_msg->id;
+
+	// Check if this is a preexisting peer
+	if (is_peered(peer_id)) {
+		// Is it inactive? If it is, then we probably have a new
+		// connection and need to update the existing peer.
+		if (!is_active(peer_id)) {
+			// Update the connection.
+			std::shared_ptr<Peer> existing_peer;
+			std::shared_ptr<Peer> new_peer;
+			for (int i = 0; i < peers->size(); i++) {
+				auto peer = (*peers)[i];
+				if (peer->local_id == m->source) {
+					new_peer = peer;
+				}
+				if (peer->unique_id == peer_id) {
+					existing_peer = peer;
+				}
+			}
+			new_peer->stop();
+			auto conn = std::move(new_peer->get_conn());
+			existing_peer->update_conn(std::move(conn));
+
+			close_notify_sem->release();
+		}
+	}
+
 	for (int i = 0; i < peers->size(); i++) {
 		auto peer = (*peers)[i];
 		if (peer->local_id == m->source) {
