@@ -17,6 +17,9 @@ Node :: process_message() {
 		case MSG_IDENT:
 			handle_ident(m.get());
 			break;
+		case MSG_IDENT_REQUEST:
+			handle_ident_request(m.get());
+			break;
 		default:
 			break;
 		}
@@ -27,12 +30,19 @@ Node :: process_message() {
 void
 Node :: handle_ping(const Message* m) {
 	// Send a PONG.
+	std::shared_ptr<Peer> peer;
 	for (int i = 0; i < peers->size(); i++) {
-		auto peer = (*peers)[i];
-		if (peer->index == m->source) {
+		peer = (*peers)[i];
+		if (peer->local_id == m->source) {
 			auto response = std::make_unique<PongMessage>();
 			peer->send(std::move(response));
 		}
+	}
+	// Check if the sender is known as a valid peer.
+	if (!peer->is_valid()) {
+		LOG("Got a PING from an invalid Peer! Requesting identity.");
+		auto req = std::make_unique<IdentityRequest>();
+		peer->send(std::move(req));
 	}
 }
 
@@ -42,9 +52,22 @@ Node :: handle_ident(const Message* m) {
 	LOG("got an identity message from " << ident_msg->address << " source " << ident_msg->source);
 	for (int i = 0; i < peers->size(); i++) {
 		auto peer = (*peers)[i];
-		if (peer->index == m->source) {
+		if (peer->local_id == m->source) {
 			peer->unique_id = ident_msg->id;
 			peer->address = ident_msg->address;
+		}
+	}
+}
+
+void
+Node :: handle_ident_request(const Message* m) {
+	auto ident_req = static_cast<const IdentityRequest*>(m);
+	for (int i = 0; i < peers->size(); i++) {
+		auto peer = (*peers)[i];
+		if (peer->local_id == m->source) {
+			// Just send our identity.
+			auto m = std::make_unique<IdentityMessage>(id, listen_address);
+			peer->send(std::move(m));
 		}
 	}
 }

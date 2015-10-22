@@ -81,4 +81,5 @@ private:
 private:
 	void handle_ping(const Message*);
 	void handle_ident(const Message*);
-};
+	void handle_ident_request(const Message*);
+}; // Node

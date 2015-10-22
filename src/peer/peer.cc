@@ -4,6 +4,10 @@
 
 void
 Peer :: reconnect() {
+	if (thread != nullptr && thread->joinable()) {
+		thread->join();
+		thread = nullptr;
+	}
 	LOG("attempting to reconnect to " << address);
 	cpl::net::SockAddr addr;
 	int status = addr.parse(address);
@@ -17,6 +21,9 @@ Peer :: reconnect() {
 	}
 	conn = std::move(new_connection);
 	last_update = std::chrono::steady_clock::now();
+	thread = std::make_unique<std::thread>([this]() {
+		read_messages();
+	});
 	active = true;
 }
 
@@ -40,7 +47,7 @@ Peer :: read_messages() {
 		if (status < 0) {
 			continue;
 		}
-		m->source = index;
+		m->source = local_id;
 		if (m->type == MSG_IDENT) {
 			valid = true;
 		}

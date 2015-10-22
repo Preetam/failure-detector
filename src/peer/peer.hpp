@@ -15,17 +15,17 @@
 class Peer
 {
 public:
-	Peer(int index,
+	Peer(int local_id,
 		 std::unique_ptr<cpl::net::TCP_Connection> conn,
 		 std::shared_ptr<Message_Queue> mq,
 		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
-	: index(index), unique_id(0), address(""),
+	: local_id(local_id), unique_id(0), address(""),
 	  conn(std::move(conn)),
 	  mq(mq), active(true), valid(false),
 	  close_notify_sem(close_notify_sem),
 	  last_update(std::chrono::steady_clock::now())
 	{
-		LOG("new peer connected with index " << index);
+		LOG("new peer connected with local_id " << local_id);
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -66,9 +66,9 @@ public:
 	}
 
 public:
+	int local_id;
 	uint64_t unique_id;
 	std::string address;
-	int index;
 
 private:
 	std::unique_ptr<cpl::net::TCP_Connection> conn;
