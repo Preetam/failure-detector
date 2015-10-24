@@ -31,6 +31,18 @@ public:
 		});
 	}
 
+	Peer(int local_id,
+		 std::string address,
+		 std::shared_ptr<Message_Queue> mq,
+		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
+	: local_id(local_id), unique_id(0), address(address),
+	  mq(mq), active(true), valid(false), run_listener(true),
+	  close_notify_sem(close_notify_sem),
+	  last_update(std::chrono::steady_clock::now())
+	{
+		LOG("new peer connected with local_id " << local_id);
+	}
+
 	// send sends a Message to the Peer.
 	void
 	send(std::unique_ptr<Message>);
