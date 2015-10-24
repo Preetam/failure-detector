@@ -9,7 +9,6 @@ Node :: process_message() {
 	std::unique_ptr<Message> m;
 	if (mq->pop_with_timeout(m, 500)) {
 		LOG("new message (type " << MSG_STR(m->type) << ")");
-		peers_lock->lock();
 		switch (m->type) {
 		case MSG_PING:
 			handle_ping(m.get());
@@ -23,7 +22,6 @@ Node :: process_message() {
 		default:
 			break;
 		}
-		peers_lock->unlock();
 	}
 }
 
@@ -54,9 +52,11 @@ Node :: handle_ident(const Message* m) {
 
 	// Check if this is a preexisting peer
 	if (is_peered(peer_id)) {
+		LOG("Already peered with " << peer_id);
 		// Is it inactive? If it is, then we probably have a new
 		// connection and need to update the existing peer.
 		if (!is_active(peer_id)) {
+			LOG(peer_id << " is not active. Will update connection.");
 			// Update the connection.
 			std::shared_ptr<Peer> existing_peer;
 			std::shared_ptr<Peer> new_peer;
@@ -72,8 +72,19 @@ Node :: handle_ident(const Message* m) {
 			new_peer->stop();
 			auto conn = std::move(new_peer->get_conn());
 			existing_peer->update_conn(std::move(conn));
-
-			close_notify_sem->release();
+		} else {
+			// Peer is active but we still got a new connection.
+			// Discard the new one.
+			LOG("Discarding new connection as a duplicate.");
+			std::shared_ptr<Peer> new_peer;
+			for (int i = 0; i < peers->size(); i++) {
+				auto peer = (*peers)[i];
+				if (peer->local_id == m->source) {
+					new_peer = peer;
+					break;
+				}
+			}
+			new_peer->stop();
 		}
 	}
 

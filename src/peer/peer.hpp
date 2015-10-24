@@ -69,7 +69,9 @@ public:
 	{
 		valid = false;
 		active = false;
-		return std::move(conn);
+		auto temp_conn = std::move(conn);
+		conn = nullptr;
+		return std::move(temp_conn);
 	}
 
 	void

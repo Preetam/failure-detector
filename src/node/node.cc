@@ -53,11 +53,11 @@ Node :: run() {
 	});
 	
 	while (true) {
+		peers_lock->lock();
 		// This is the main node loop.
 		process_message();
 
 		// Reconnection check.
-		peers_lock->lock();
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
 			if (peer->is_valid() && !peer->is_active() &&
@@ -67,10 +67,8 @@ Node :: run() {
 				peer->reconnect();
 			}
 		}
-		peers_lock->unlock();
 
 		// Pinging.
-		peers_lock->lock();
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
 			LOG(peer->address << " was last active " << peer->ms_since_last_active() << " ms ago");
@@ -85,6 +83,7 @@ Node :: run() {
 				LOG(peer->address << " has not been active for over 2 sec.");
 			}
 		}
+
 		peers_lock->unlock();
 	}
 }
