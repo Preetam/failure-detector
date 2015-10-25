@@ -42,7 +42,7 @@ Node :: run() {
 		// Reconnection check.
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
-			if (peer->is_valid() && !peer->is_active() &&
+			if (peer->valid && !peer->active &&
 				peer->ms_since_last_active() > 5000) {
 				// Attempt to reconnect.
 				LOG("reconnecting to " << peer->address);
@@ -54,7 +54,7 @@ Node :: run() {
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
 			LOG(peer->address << " was last active " << peer->ms_since_last_active() << " ms ago");
-			if (peer->is_valid() && peer->is_active() &&
+			if (peer->valid && peer->active &&
 				peer->ms_since_last_active() > 1000) {
 				LOG("sending a ping to " << peer->address);
 				auto ping = std::make_unique<PingMessage>();
@@ -63,6 +63,7 @@ Node :: run() {
 
 			if (peer->ms_since_last_active() > 2000) {
 				LOG(peer->address << " has not been active for over 2 sec.");
+				peer->active = false;
 			}
 		}
 
@@ -78,7 +79,7 @@ Node :: cleanup_nodes() {
 		close_notify_sem->acquire();
 		peers_lock->lock();
 		for (int i = 0; i < peers->size(); i++) {
-			if (!(*peers)[i]->is_valid()) {
+			if (!(*peers)[i]->valid) {
 				peers->erase(peers->begin()+i);
 				i--;
 				LOG("erasing invalid peer");
@@ -109,21 +110,23 @@ Node :: handle_new_connections() {
 
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
+	peers_lock->lock();
 	auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr), mq, close_notify_sem);
+	peer->valid = true;
+	peer->active = true;
 	// Send our identity to the new peer.
 	auto m = std::make_unique<IdentityMessage>(id, listen_address);
 	peer->send(std::move(m));
-	peers_lock->lock();
 	peers->push_back(std::move(peer));
-	peers_lock->unlock();
 	id_counter++;
+	peers_lock->unlock();
 }
 
 bool
 Node :: is_peered(uint64_t peer_id) {
 	for (int i = 0; i < peers->size(); i++) {
 		auto peer = (*peers)[i];
-		if (peer->is_valid() && peer->unique_id == peer_id) {
+		if (peer->valid && peer->unique_id == peer_id) {
 			return true;
 		}
 	}
@@ -134,8 +137,8 @@ bool
 Node :: is_active(uint64_t peer_id) {
 	for (int i = 0; i < peers->size(); i++) {
 		auto peer = (*peers)[i];
-		if (peer->is_valid() &&
-			peer->is_active() && peer->unique_id == peer_id) {
+		if (peer->valid &&
+			peer->active && peer->unique_id == peer_id) {
 			return true;
 		}
 	}

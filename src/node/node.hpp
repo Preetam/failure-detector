@@ -39,6 +39,8 @@ public:
 
 	// connect_to_peer connects to a peer with the given
 	// address and creates a new Peer instance for the node.
+	// If the node is unable to establish a connection, the
+	// peer is registered as a failed node.
 	void
 	connect_to_peer(cpl::net::SockAddr);
 

@@ -29,6 +29,7 @@ Peer :: reconnect() {
 
 void
 Peer :: read_messages() {
+	signal(SIGPIPE, SIG_IGN);
 	while (run_listener) {
 		uint8_t buf[16000];
 		std::unique_ptr<Message> m;
@@ -48,15 +49,13 @@ Peer :: read_messages() {
 			continue;
 		}
 		m->source = local_id;
-		if (m->type == MSG_IDENT) {
-			valid = true;
-		}
 		mq->push(std::move(m));
 		last_update = std::chrono::steady_clock::now();
 	}
 
 	if (!run_listener) {
 		// We weren't signaled to stop listening.
+		conn = nullptr;
 		active = false;
 		close_notify_sem->release();
 	}
@@ -64,6 +63,7 @@ Peer :: read_messages() {
 
 void
 Peer :: send(std::unique_ptr<Message> m) {
+	signal(SIGPIPE, SIG_IGN);
 	uint8_t buf[16000];
 	int packed_size = m->pack(buf, 16000);
 	int status = conn->send(buf, packed_size, 0);

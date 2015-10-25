@@ -47,20 +47,6 @@ public:
 	void
 	send(std::unique_ptr<Message>);
 
-	// is_active returns true if the Peer is still active.
-	bool
-	is_active()
-	{
-		return active;
-	}
-
-	// is_valid returns true if the Peer is valid.
-	bool
-	is_valid()
-	{
-		return valid;
-	}
-
 	int
 	ms_since_last_active()
 	{
@@ -71,14 +57,15 @@ public:
 	void
 	stop()
 	{
-		run_listener = false;
-		thread->join();
-		thread = nullptr;
+		//run_listener = false;
+		//thread->join();
+		//thread = nullptr;
 	}
 
 	std::unique_ptr<cpl::net::TCP_Connection>
 	get_conn()
 	{
+		run_listener = false;
 		valid = false;
 		active = false;
 		auto temp_conn = std::move(conn);
@@ -89,8 +76,10 @@ public:
 	void
 	update_conn(std::unique_ptr<cpl::net::TCP_Connection> new_connection)
 	{
+		run_listener = false;
 		conn = std::move(new_connection);
 		last_update = std::chrono::steady_clock::now();
+		run_listener = true;
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -111,13 +100,19 @@ public:
 	uint64_t unique_id;
 	std::string address;
 
+	// Is this peer responding to pings?
+	// Is it sending valid data?
+	std::atomic<bool> active;
+
+	// Can we reconnect to this peer?
+	// Do we have an identity?
+	std::atomic<bool> valid;
+
 private:
 	std::unique_ptr<cpl::net::TCP_Connection> conn;
 	std::unique_ptr<std::thread> thread;
 	std::shared_ptr<Message_Queue> mq;
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
-	std::atomic<bool> active;
-	std::atomic<bool> valid;
 	std::atomic<bool> run_listener;
 	std::chrono::time_point<std::chrono::steady_clock> last_update;
 

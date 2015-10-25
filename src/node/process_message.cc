@@ -37,7 +37,7 @@ Node :: handle_ping(const Message* m) {
 		}
 	}
 	// Check if the sender is known as a valid peer.
-	if (!peer->is_valid()) {
+	if (!peer->valid) {
 		LOG("Got a PING from an invalid Peer! Requesting identity.");
 		auto req = std::make_unique<IdentityRequest>();
 		peer->send(std::move(req));
@@ -62,13 +62,15 @@ Node :: handle_ident(const Message* m) {
 			std::shared_ptr<Peer> new_peer;
 			for (int i = 0; i < peers->size(); i++) {
 				auto peer = (*peers)[i];
-				if (peer->local_id == m->source) {
+				if (peer->local_id == ident_msg->source) {
 					new_peer = peer;
 				}
 				if (peer->unique_id == peer_id) {
 					existing_peer = peer;
 				}
 			}
+			new_peer->valid = false;
+			new_peer->active = false;
 			new_peer->stop();
 			auto conn = std::move(new_peer->get_conn());
 			existing_peer->update_conn(std::move(conn));
@@ -79,20 +81,38 @@ Node :: handle_ident(const Message* m) {
 			std::shared_ptr<Peer> new_peer;
 			for (int i = 0; i < peers->size(); i++) {
 				auto peer = (*peers)[i];
-				if (peer->local_id == m->source) {
+				if (peer->local_id == ident_msg->source) {
 					new_peer = peer;
 					break;
 				}
 			}
 			new_peer->stop();
+			new_peer->valid = false;
+			close_notify_sem->release();
+		}
+	} else {
+		LOG("Not peered with " << peer_id);
+		// This peer has not been registered.
+		std::shared_ptr<Peer> new_peer;
+		LOG("peers->size() == " << peers->size());
+		for (int i = 0; i < peers->size(); i++) {
+			auto peer = (*peers)[i];
+			LOG(peer->local_id << " " << ident_msg->source);
+			if (peer->local_id == ident_msg->source) {
+				peer->unique_id = peer_id;
+				peer->address = ident_msg->address;
+				LOG("Registered " << peer_id << " with source " << ident_msg->source);
+				break;
+			}
 		}
 	}
-
+SKIP:
 	for (int i = 0; i < peers->size(); i++) {
 		auto peer = (*peers)[i];
 		if (peer->local_id == m->source) {
 			peer->unique_id = ident_msg->id;
 			peer->address = ident_msg->address;
+			peer->valid = true;
 		}
 	}
 }
