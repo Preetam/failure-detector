@@ -57,9 +57,11 @@ public:
 	void
 	stop()
 	{
-		//run_listener = false;
-		//thread->join();
-		//thread = nullptr;
+		run_listener = false;
+		thread->join();
+		valid = false;
+		active = false;
+		thread = nullptr;
 	}
 
 	std::unique_ptr<cpl::net::TCP_Connection>
@@ -92,7 +94,9 @@ public:
 	~Peer()
 	{
 		LOG("peer disconnected");
-		thread->join();
+		if (thread) {
+			thread->join();
+		}
 	}
 
 public:

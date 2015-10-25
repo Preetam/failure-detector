@@ -36,6 +36,10 @@ Node :: handle_ping(const Message* m) {
 			peer->send(std::move(response));
 		}
 	}
+	if (!peer) {
+		// Couldn't find an associated peer. Maybe it was removed.
+		return;
+	}
 	// Check if the sender is known as a valid peer.
 	if (!peer->valid) {
 		LOG("Got a PING from an invalid Peer! Requesting identity.");
@@ -89,6 +93,7 @@ Node :: handle_ident(const Message* m) {
 			new_peer->stop();
 			new_peer->valid = false;
 			close_notify_sem->release();
+			return;
 		}
 	} else {
 		LOG("Not peered with " << peer_id);
@@ -106,13 +111,13 @@ Node :: handle_ident(const Message* m) {
 			}
 		}
 	}
-SKIP:
 	for (int i = 0; i < peers->size(); i++) {
 		auto peer = (*peers)[i];
 		if (peer->local_id == m->source) {
 			peer->unique_id = ident_msg->id;
 			peer->address = ident_msg->address;
 			peer->valid = true;
+			peer->active = true;
 		}
 	}
 }
