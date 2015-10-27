@@ -6,7 +6,7 @@ void
 Peer :: reconnect() {
 	cpl::RWLock lk(connection_lock, false);
 	last_reconnect = std::chrono::steady_clock::now();
-	LOG("attempting to reconnect to " << address);
+	//LOG("attempting to reconnect to " << address);
 	cpl::net::SockAddr addr;
 	int status = addr.parse(address);
 	if (status < 0) {
@@ -15,11 +15,11 @@ Peer :: reconnect() {
 	auto new_connection = std::make_unique<cpl::net::TCP_Connection>();
 	status = new_connection->connect(addr);
 	if (status < 0) {
-		LOG("couldn't reconnect to " << address);
+		//LOG("couldn't reconnect to " << address);
 		has_valid_connection = false;
 		return;
 	}
-	LOG("reconnected to " << address);
+	//LOG("reconnected to " << address);
 	new_connection->set_timeout(1,0);
 	conn = std::move(new_connection);
 	last_update = std::chrono::steady_clock::now();

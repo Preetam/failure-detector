@@ -32,7 +32,7 @@ public:
 	  last_update(std::chrono::steady_clock::now()),
 	  has_valid_connection(true)
 	{ 
-		LOG("new peer connected with local_id " << local_id);
+		//LOG("new peer connected with local_id " << local_id);
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -55,7 +55,7 @@ public:
 	  last_update(std::chrono::steady_clock::now()),
 	  has_valid_connection(true)
 	{
-		LOG("new peer connected with local_id " << local_id);
+		//LOG("new peer connected with local_id " << local_id);
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -71,7 +71,7 @@ public:
 	  last_update(std::chrono::steady_clock::now()),
 	  has_valid_connection(false)
 	{
-		LOG("new peer connected with local_id " << local_id);
+		//LOG("new peer connected with local_id " << local_id);
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -124,7 +124,7 @@ public:
 	~Peer()
 	{
 		run_listener = false;
-		LOG("peer[" << local_id << "] disconnected");
+		//LOG("peer[" << local_id << "] disconnected");
 		thread->join();
 	}
 

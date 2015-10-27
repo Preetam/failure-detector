@@ -2,7 +2,7 @@ dependencies:
   pre:
     - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
     - sudo apt-get update
-    - sudo apt-get install g++-4.9 -y
+    - sudo apt-get install g++-4.9 libgoogle-glog-dev -y
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 10
     - git submodule update --init --recursive
 test:

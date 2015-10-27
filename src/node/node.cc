@@ -50,7 +50,7 @@ Node :: run() {
 				peer->ms_since_last_active() > 5000 &&
 				peer->ms_since_last_reconnect() > 2000) {
 				// Attempt to reconnect.
-				LOG("reconnecting to " << peer->address);
+				//LOG("reconnecting to " << peer->address);
 				peer->reconnect();
 				// Send our identity to the new peer.
 				auto m = std::make_unique<IdentityMessage>(id, listen_address);
@@ -61,18 +61,18 @@ Node :: run() {
 		// Pinging.
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
-			LOG(peer->address <<
-				"[" << peer->local_id << "]" <<
-				" was last active " << peer->ms_since_last_active() << " ms ago");
+			//LOG(peer->address <<
+			//	"[" << peer->local_id << "]" <<
+			//	" was last active " << peer->ms_since_last_active() << " ms ago");
 			if (peer->valid && peer->active &&
 				peer->ms_since_last_active() > 1000) {
-				LOG("sending a ping to " << peer->address);
+				//LOG("sending a ping to " << peer->address);
 				auto ping = std::make_unique<PingMessage>();
 				peer->send(std::move(ping));
 			}
 
 			if (peer->ms_since_last_active() > 2000) {
-				LOG(peer->address << " has not been active for over 2 sec.");
+				//LOG(peer->address << " has not been active for over 2 sec.");
 				peer->active = false;
 			}
 		}
@@ -88,15 +88,15 @@ Node :: cleanup_nodes() {
 		// is closed.
 		close_notify_sem->acquire();
 		peers_lock->lock();
-		LOG("Cleaning up invalid peers");
+		//LOG("Cleaning up invalid peers");
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
-			LOG("Peer " << peer->address <<
-				" [" << peer->local_id << "]: " << peer->valid << "/" << peer->active);
+			//LOG("Peer " << peer->address <<
+			//	" [" << peer->local_id << "]: " << peer->valid << "/" << peer->active);
 			if (!peer->valid) {
 				peers->erase(peers->begin()+i);
 				i--;
-				LOG("erasing invalid peer");
+				//LOG("erasing invalid peer");
 			}
 		}
 		peers_lock->unlock();

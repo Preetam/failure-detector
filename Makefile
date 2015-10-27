@@ -10,7 +10,7 @@ INCL     := ${shell find ./include}
 INCL     += ${shell find ./src -name *.hpp}
 
 CXXFLAGS = -std=c++14 -I./src -I./include -fPIC
-LD_FLAGS = -L./build -lpthread
+LD_FLAGS = -L./build -lpthread -lglog
 
 debug: CXXFLAGS += -DDEBUG -g
 debug: build/failure-detector
