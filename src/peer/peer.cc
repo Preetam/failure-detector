@@ -56,6 +56,7 @@ Peer :: read_messages() {
 			connection_lock.lock();
 			has_valid_connection = false;
 			conn = nullptr;
+			active = false;
 			connection_lock.unlock();
 			continue;
 		}
@@ -65,6 +66,7 @@ Peer :: read_messages() {
 			connection_lock.lock();
 			has_valid_connection = false;
 			conn = nullptr;
+			active = false;
 			connection_lock.unlock();
 			continue;
 		}

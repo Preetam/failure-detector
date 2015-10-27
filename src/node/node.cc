@@ -42,6 +42,10 @@ Node :: run() {
 		// Reconnection check.
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
+			if (!peer->valid && !peer->active) {
+				close_notify_sem->release();
+				continue;
+			}
 			if (peer->valid && !peer->active &&
 				peer->ms_since_last_active() > 5000) {
 				// Attempt to reconnect.
@@ -121,7 +125,6 @@ void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 	peers_lock->lock();
 	auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr), mq, close_notify_sem);
-	peer->valid = true;
 	peer->active = true;
 	// Send our identity to the new peer.
 	auto m = std::make_unique<IdentityMessage>(id, listen_address);
