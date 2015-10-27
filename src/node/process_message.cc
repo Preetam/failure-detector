@@ -80,20 +80,31 @@ Node :: handle_ident(const Message* m) {
 			close_notify_sem->release();
 			return;
 		} else {
-			// Peer is active but we still got a new connection.
-			// Discard the new one.
-			LOG("Discarding new connection as a duplicate.");
-			std::shared_ptr<Peer> new_peer;
+			// Peer is active.
+			// Check if this identity message is from a new connection.
+			bool new_connection = false;
 			for (int i = 0; i < peers->size(); i++) {
 				auto peer = (*peers)[i];
-				if (peer->local_id == ident_msg->source) {
-					new_peer = peer;
-					break;
+				if (peer->unique_id == peer_id &&
+					ident_msg->source != peer->local_id) {
+					new_connection = true;
 				}
 			}
-			new_peer->valid = false;
-			close_notify_sem->release();
-			return;
+			if (new_connection) {
+				// We have a new connection from an existing,
+				// active peer.
+				// Discard it as a duplicate.
+				LOG("Discarding new connection as a duplicate.");
+				for (int i = 0; i < peers->size(); i++) {
+					auto peer = (*peers)[i];
+					if (peer->local_id == ident_msg->source) {
+						peer->valid = false;
+						break;
+					}
+				}
+				close_notify_sem->release();
+				return;
+			}
 		}
 	} else {
 		LOG("Not peered with " << peer_id);
@@ -118,6 +129,7 @@ Node :: handle_ident(const Message* m) {
 			peer->address = ident_msg->address;
 			peer->valid = true;
 			peer->active = true;
+			break;
 		}
 	}
 }

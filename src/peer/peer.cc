@@ -5,6 +5,7 @@
 void
 Peer :: reconnect() {
 	cpl::RWLock lk(connection_lock, false);
+	last_reconnect = std::chrono::steady_clock::now();
 	LOG("attempting to reconnect to " << address);
 	cpl::net::SockAddr addr;
 	int status = addr.parse(address);
@@ -43,7 +44,6 @@ Peer :: read_messages() {
 			}
 		}
 		if (sleep) {
-			LOG("No valid connection to " << local_id << "; sleeping...");
 			using namespace std::literals;
 			std::this_thread::sleep_for(1000ms);
 			continue;
@@ -70,16 +70,15 @@ Peer :: read_messages() {
 			connection_lock.unlock();
 			continue;
 		}
+		active = true;
 		m->source = local_id;
 		mq->push(std::move(m));
 		last_update = std::chrono::steady_clock::now();
 	}
 
-	if (!run_listener) {
-		// We weren't signaled to stop listening.
-		active = false;
-		close_notify_sem->release();
-	}
+	active = false;
+	valid = false;
+	close_notify_sem->release();
 }
 
 void

@@ -20,13 +20,41 @@ public:
 		 std::unique_ptr<cpl::net::TCP_Connection> conn,
 		 std::shared_ptr<Message_Queue> mq,
 		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
-	: local_id(local_id), unique_id(0), address(""),
+	: local_id(local_id),
+	  unique_id(0),
+	  address(""),
 	  conn(std::move(conn)),
-	  mq(mq), active(true), valid(false), run_listener(true),
+	  mq(mq),
+	  active(true),
+	  valid(false),
+	  run_listener(true),
 	  close_notify_sem(close_notify_sem),
 	  last_update(std::chrono::steady_clock::now()),
 	  has_valid_connection(true)
 	{ 
+		LOG("new peer connected with local_id " << local_id);
+		thread = std::make_unique<std::thread>([this]() {
+			read_messages();
+		});
+	}
+
+	Peer(int local_id,
+		 std::unique_ptr<cpl::net::TCP_Connection> conn,
+		 std::string address,
+		 std::shared_ptr<Message_Queue> mq,
+		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
+	: local_id(local_id),
+	  unique_id(0),
+	  address(address),
+	  conn(std::move(conn)),
+	  mq(mq),
+	  active(false),
+	  valid(true), // since we have a reconnection address
+	  run_listener(true),
+	  close_notify_sem(close_notify_sem),
+	  last_update(std::chrono::steady_clock::now()),
+	  has_valid_connection(true)
+	{
 		LOG("new peer connected with local_id " << local_id);
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
@@ -44,6 +72,9 @@ public:
 	  has_valid_connection(false)
 	{
 		LOG("new peer connected with local_id " << local_id);
+		thread = std::make_unique<std::thread>([this]() {
+			read_messages();
+		});
 	}
 
 	// send sends a Message to the Peer.
@@ -55,6 +86,13 @@ public:
 	{
 		auto now = std::chrono::steady_clock::now();
 		return std::chrono::duration_cast<std::chrono::milliseconds>(now-last_update).count();
+	}
+
+	int
+	ms_since_last_reconnect()
+	{
+		auto now = std::chrono::steady_clock::now();
+		return std::chrono::duration_cast<std::chrono::milliseconds>(now-last_reconnect).count();
 	}
 
 	std::unique_ptr<cpl::net::TCP_Connection>
@@ -112,6 +150,7 @@ private:
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
 	std::atomic<bool> run_listener;
 	std::chrono::time_point<std::chrono::steady_clock> last_update;
+	std::chrono::time_point<std::chrono::steady_clock> last_reconnect;
 
 	cpl::RWMutex connection_lock;
 	bool has_valid_connection;

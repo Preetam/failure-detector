@@ -13,14 +13,10 @@ Node :: connect_to_peer(cpl::net::SockAddr address) {
 		LOG("unable to connect to " << address);
 		LOG("adding " << address << " as a failed peer.");
 		peer = std::make_shared<Peer>(id_counter++, address.str(), mq, close_notify_sem);
-		peer->valid = true;
-		peer->active = false;
 	} else {
 		LOG("successfully connected to " << address);
 		peer_conn->set_timeout(1,0);
-		peer = std::make_shared<Peer>(id_counter++, std::move(peer_conn), mq, close_notify_sem);
-		peer->valid = true;
-		peer->active = true;
+		peer = std::make_shared<Peer>(id_counter++, std::move(peer_conn), address.str(), mq, close_notify_sem);
 		// Send our identity to the new peer.
 		auto m = std::make_unique<IdentityMessage>(id, listen_address);
 		peer->send(std::move(m));
