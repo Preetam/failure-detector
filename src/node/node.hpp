@@ -39,6 +39,8 @@ public:
 
 	// connect_to_peer connects to a peer with the given
 	// address and creates a new Peer instance for the node.
+	// If the node is unable to establish a connection, the
+	// peer is registered as a failed node.
 	void
 	connect_to_peer(cpl::net::SockAddr);
 
@@ -79,6 +81,15 @@ private:
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
 
 private:
+	// is_peered returns true if peer_id matches the unique ID
+	// of an existing peer.
+	bool
+	is_peered(uint64_t peer_id);
+
+	bool
+	is_active(uint64_t peer_id);
+
+	// Message handlers
 	void handle_ping(const Message*);
 	void handle_ident(const Message*);
 	void handle_ident_request(const Message*);

@@ -1,5 +1,6 @@
-#include <iostream>
 #include <string>
+#include <signal.h>
+#include <iostream>
 
 #include <cpl/flags.hpp>
 #include <cpl/net/sockaddr.hpp>
@@ -10,14 +11,19 @@
 #include "flags.hpp"
 #include "node/node.hpp"
 
-const char* NAME    = "failure-detector";
-const char* VERSION = "0.0.1";
+const std::string NAME    = "failure-detector";
+const std::string VERSION = "0.0.1";
 
 int
 main(int argc, char* argv[]) {
+	// Ignore SIGPIPE. This way we don't exit if we attempt to
+	// write to a closed connection.
+	signal(SIGPIPE, SIG_IGN);
+
 	// Local listen address
 	std::string addr_str;
-	// Peers to initially connect to
+	// Peers to initially connect to.
+	// These are automatically marked as valid.
 	std::vector<cpl::net::SockAddr> peer_addrs;
 	uint64_t id = 0;
 
@@ -46,14 +52,17 @@ main(int argc, char* argv[]) {
 		std::cerr << "failed to start " << NAME << std::endl;
 		return 1;
 	}
-	// Connect to each specified peer
+	// Connect to each specified peer.
+	// If a connection can't be established, the peer is
+	// marked as inactive and reconnections will be attempted.
 	for (int i = 0; i < peer_addrs.size(); i++) {
 		node->connect_to_peer(peer_addrs[i]);
 	}
 
 	std::cerr << NAME << " " << VERSION << " listening on " << addr_str << std::endl;
-	LOG("local ID is " << id);
+	LOG("Unique ID is " << id);
 	node->run();
+
 	// Unreachable
 	return 0;
 }
