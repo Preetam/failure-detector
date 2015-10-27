@@ -17,6 +17,7 @@ Node :: connect_to_peer(cpl::net::SockAddr address) {
 		peer->active = false;
 	} else {
 		LOG("successfully connected to " << address);
+		peer_conn->set_timeout(1,0);
 		peer = std::make_shared<Peer>(id_counter++, std::move(peer_conn), mq, close_notify_sem);
 		peer->valid = true;
 		peer->active = true;

@@ -75,9 +75,8 @@ Node :: handle_ident(const Message* m) {
 			}
 			new_peer->valid = false;
 			new_peer->active = false;
-			new_peer->stop();
 			auto conn = std::move(new_peer->get_conn());
-			existing_peer->update_conn(std::move(conn));
+			existing_peer->use_conn(std::move(conn));
 		} else {
 			// Peer is active but we still got a new connection.
 			// Discard the new one.
@@ -90,7 +89,6 @@ Node :: handle_ident(const Message* m) {
 					break;
 				}
 			}
-			new_peer->stop();
 			new_peer->valid = false;
 			close_notify_sem->release();
 			return;
