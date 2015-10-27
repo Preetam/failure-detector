@@ -12,7 +12,7 @@
 #include "node/node.hpp"
 
 const std::string NAME    = "failure-detector";
-const std::string VERSION = "0.0.1";
+const std::string VERSION = "0.0.2";
 
 int
 main(int argc, char* argv[]) {
