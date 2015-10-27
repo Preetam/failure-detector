@@ -7,5 +7,5 @@ dependencies:
     - git submodule update --init --recursive
 test:
   override:
-    - make
+    - make -j
     - make test
