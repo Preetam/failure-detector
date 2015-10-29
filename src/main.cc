@@ -8,7 +8,6 @@
 #include <cpl/net/tcp_socket.hpp>
 #include <cpl/net/tcp_connection.hpp>
 
-#include "log.hpp"
 #include "flags.hpp"
 #include "node/node.hpp"
 

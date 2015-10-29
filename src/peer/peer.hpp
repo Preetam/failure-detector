@@ -6,11 +6,11 @@
 #include <thread>
 #include <iostream>
 
+#include <glog/logging.h>
 #include <cpl/net/tcp_connection.hpp>
 #include <cpl/semaphore.hpp>
 #include <cpl/rwmutex.hpp>
 
-#include "../log.hpp"
 #include "../message_queue/message_queue.hpp"
 
 class Peer
@@ -143,13 +143,15 @@ public:
 	// Can we reconnect to this peer?
 	std::atomic<bool> valid;
 
+	std::chrono::time_point<std::chrono::steady_clock> last_update;
+
+
 private:
 	std::unique_ptr<cpl::net::TCP_Connection> conn;
 	std::unique_ptr<std::thread> thread;
 	std::shared_ptr<Message_Queue> mq;
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
 	std::atomic<bool> run_listener;
-	std::chrono::time_point<std::chrono::steady_clock> last_update;
 	std::chrono::time_point<std::chrono::steady_clock> last_reconnect;
 
 	cpl::RWMutex connection_lock;

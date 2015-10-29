@@ -10,11 +10,11 @@ Node :: connect_to_peer(cpl::net::SockAddr address) {
 	// Attempt to connect.
 	int status = peer_conn->connect(address);
 	if (status < 0) {
-		//LOG("unable to connect to " << address);
-		//LOG("adding " << address << " as a failed peer.");
+		LOG(WARNING) << "unable to connect to " << address;
+		LOG(INFO) << "adding " << address << " as a failed peer";
 		peer = std::make_shared<Peer>(id_counter++, address.str(), mq, close_notify_sem);
 	} else {
-		//LOG("successfully connected to " << address);
+		LOG(INFO) << "successfully connected to " << address;
 		peer_conn->set_timeout(1,0);
 		peer = std::make_shared<Peer>(id_counter++, std::move(peer_conn), address.str(), mq, close_notify_sem);
 		// Send our identity to the new peer.

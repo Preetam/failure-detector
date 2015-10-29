@@ -5,12 +5,12 @@
 #include <memory>
 #include <cerrno>
 
+#include <glog/logging.h>
 #include <cpl/net/sockaddr.hpp>
 #include <cpl/net/tcp_socket.hpp>
 #include <cpl/semaphore.hpp>
 #include <cpl/mutex.hpp>
 
-#include "../log.hpp"
 #include "message_queue/message_queue.hpp"
 #include "peer/peer.hpp"
 
@@ -91,6 +91,7 @@ private:
 
 	// Message handlers
 	void handle_ping(const Message*);
+	void handle_pong(const Message*);
 	void handle_ident(const Message*);
 	void handle_ident_request(const Message*);
 }; // Node

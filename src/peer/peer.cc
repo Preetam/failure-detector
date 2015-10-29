@@ -2,6 +2,8 @@
 
 #include "../message/decode.hpp"
 
+#include <future>
+
 void
 Peer :: reconnect() {
 	cpl::RWLock lk(connection_lock, false);
@@ -44,6 +46,11 @@ Peer :: read_messages() {
 			}
 		}
 		if (sleep) {
+			if (ms_since_last_reconnect() > 1000) {
+				LOG(INFO) << "attempting to reconnect to " << address;
+				reconnect();
+				continue;
+			}
 			using namespace std::literals;
 			std::this_thread::sleep_for(1000ms);
 			continue;

@@ -13,6 +13,9 @@ Node :: process_message() {
 		case MSG_PING:
 			handle_ping(m.get());
 			break;
+		case MSG_PONG:
+			handle_pong(m.get());
+			break;
 		case MSG_IDENT:
 			handle_ident(m.get());
 			break;
@@ -46,6 +49,23 @@ Node :: handle_ping(const Message* m) {
 		auto req = std::make_unique<IdentityRequest>();
 		peer->send(std::move(req));
 	}
+}
+
+void
+Node :: handle_pong(const Message* m) {
+	std::shared_ptr<Peer> peer;
+	for (int i = 0; i < peers->size(); i++) {
+		peer = (*peers)[i];
+		if (peer->local_id == m->source) {
+			auto response = std::make_unique<PongMessage>();
+			peer->send(std::move(response));
+		}
+	}
+	if (!peer) {
+		// Couldn't find an associated peer. Maybe it was removed.
+		return;
+	}
+	peer->last_update = std::chrono::steady_clock::now();
 }
 
 void
