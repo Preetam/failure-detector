@@ -35,11 +35,11 @@ Node :: run() {
 	});
 	
 	while (true) {
-		peers_lock->lock();
+		std::lock_guard<cpl::Mutex> lk(*peers_lock);
 		// This is the main node loop.
 		process_message();
 
-		// Reconnection check.
+		// Cleanup check.
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
 			if (!peer->valid && !peer->active) {
@@ -52,13 +52,14 @@ Node :: run() {
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
 			if (peer->valid && peer->active &&
-				peer->ms_since_last_active() > 100) {
-				LOG_EVERY_N(INFO, 10) << "sending a ping to " << peer->address;
+				peer->ms_since_last_active() > 1000) {
+				LOG(INFO) << "sending a ping to " << peer->address <<
+					" because it was last active " << peer->ms_since_last_active() <<
+					" ms ago";
 				auto ping = std::make_unique<PingMessage>();
 				peer->send(std::move(ping));
 			}
 		}
-		peers_lock->unlock();
 	}
 }
 
@@ -68,7 +69,7 @@ Node :: cleanup_nodes() {
 		// Wait until we're signaled that a connection
 		// is closed.
 		close_notify_sem->acquire();
-		peers_lock->lock();
+		std::lock_guard<cpl::Mutex> lk(*peers_lock);
 		LOG(INFO) << "cleaning up invalid peers";
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
@@ -77,7 +78,6 @@ Node :: cleanup_nodes() {
 				i--;
 			}
 		}
-		peers_lock->unlock();
 	}
 }
 

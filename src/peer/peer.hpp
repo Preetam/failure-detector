@@ -32,7 +32,7 @@ public:
 	  last_update(std::chrono::steady_clock::now()),
 	  has_valid_connection(true)
 	{ 
-		//LOG("new peer connected with local_id " << local_id);
+		LOG(INFO) << "new peer connected with local_id " << local_id;
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -55,7 +55,7 @@ public:
 	  last_update(std::chrono::steady_clock::now()),
 	  has_valid_connection(true)
 	{
-		//LOG("new peer connected with local_id " << local_id);
+		LOG(INFO) << "new peer connected with local_id " << local_id;
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -71,7 +71,7 @@ public:
 	  last_update(std::chrono::steady_clock::now()),
 	  has_valid_connection(false)
 	{
-		//LOG("new peer connected with local_id " << local_id);
+		LOG(INFO) << "new peer connected with local_id " << local_id;
 		thread = std::make_unique<std::thread>([this]() {
 			read_messages();
 		});
@@ -84,6 +84,7 @@ public:
 	int
 	ms_since_last_active()
 	{
+		std::lock_guard<cpl::Mutex> lk(update_lock);
 		auto now = std::chrono::steady_clock::now();
 		return std::chrono::duration_cast<std::chrono::milliseconds>(now-last_update).count();
 	}
@@ -119,12 +120,19 @@ public:
 	}
 
 	void
+	mark_updated()
+	{
+		std::lock_guard<cpl::Mutex> lk(update_lock);
+		last_update = std::chrono::steady_clock::now();
+	}
+
+	void
 	reconnect();
 
 	~Peer()
 	{
 		run_listener = false;
-		//LOG("peer[" << local_id << "] disconnected");
+		LOG(INFO) << "peer[" << local_id << "] disconnected";
 		thread->join();
 	}
 
@@ -143,9 +151,6 @@ public:
 	// Can we reconnect to this peer?
 	std::atomic<bool> valid;
 
-	std::chrono::time_point<std::chrono::steady_clock> last_update;
-
-
 private:
 	std::unique_ptr<cpl::net::TCP_Connection> conn;
 	std::unique_ptr<std::thread> thread;
@@ -156,6 +161,9 @@ private:
 
 	cpl::RWMutex connection_lock;
 	bool has_valid_connection;
+
+	cpl::Mutex update_lock;
+	std::chrono::time_point<std::chrono::steady_clock> last_update;
 
 	void
 	read_messages();

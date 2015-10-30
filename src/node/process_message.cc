@@ -8,7 +8,7 @@ void
 Node :: process_message() {
 	std::unique_ptr<Message> m;
 	if (mq->pop_with_timeout(m, 500)) {
-		//LOG("new message (type " << MSG_STR(m->type) << ")");
+		LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
 		switch (m->type) {
 		case MSG_PING:
 			handle_ping(m.get());
@@ -57,15 +57,14 @@ Node :: handle_pong(const Message* m) {
 	for (int i = 0; i < peers->size(); i++) {
 		peer = (*peers)[i];
 		if (peer->local_id == m->source) {
-			auto response = std::make_unique<PongMessage>();
-			peer->send(std::move(response));
+			break;
 		}
 	}
 	if (!peer) {
 		// Couldn't find an associated peer. Maybe it was removed.
 		return;
 	}
-	peer->last_update = std::chrono::steady_clock::now();
+	peer->mark_updated();
 }
 
 void
