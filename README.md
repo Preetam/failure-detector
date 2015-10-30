@@ -27,6 +27,8 @@ $ make
 $ sudo make install
 ```
 
+Finally, you can run the following to build the main program:
+
 ```sh
 $ make       # Build main program
 $ make test  # Runs tests (not that many at this point)
