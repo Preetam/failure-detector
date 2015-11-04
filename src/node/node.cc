@@ -58,6 +58,8 @@ Node :: run() {
 					" ms ago";
 				auto ping = std::make_unique<PingMessage>();
 				peer->send(std::move(ping));
+			} else {
+				LOG(INFO) << "NOT sending a ping to " << peer->address;
 			}
 		}
 	}

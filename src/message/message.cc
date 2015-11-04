@@ -2,16 +2,32 @@
 
 #include "message.hpp"
 
+/**
+ * A message header has 4 fields:
+ * - type (1 byte)
+ * - flags (1 byte)
+ * - id (8 bytes)
+ * - length (4 bytes)
+ * Total: 14 bytes
+ */
+#define MSG_HEADER_SIZE 14
+
 int
 Message :: pack(uint8_t* dest, int dest_len) {
 	int length = body_size();
-	if (dest_len < length+1) {
+	if (dest_len < length+MSG_HEADER_SIZE) {
 		return -1;
 	}
 
 	write8be(type, dest);
 	dest++;
 	dest_len--;
+	write8be(flags, dest);
+	dest++;
+	dest_len--;
+	write64be(id, dest);
+	dest += 8;
+	dest_len -= 8;
 	write32be(length, dest);
 	dest += 4;
 	dest_len -= 4;
@@ -20,22 +36,28 @@ Message :: pack(uint8_t* dest, int dest_len) {
 	if (status < 0) {
 		return -2;
 	}
-	return 5+length;
+	return MSG_HEADER_SIZE+length;
 }
 
 int
 Message :: unpack(uint8_t* src, int src_len) {
-	if (src_len < 5) {
+	if (src_len < MSG_HEADER_SIZE) {
 		return -1;
 	}
 
 	type = read8be(src);
 	src++;
+	flags = read8be(src);
+	src++;
+	id = read64be(src);
+	src += 8;
 	uint32_t length = read32be(src);
 	src += 4;
-	if (src_len - 5 < length) {
+	if (src_len - MSG_HEADER_SIZE < length) {
 		return -2;
 	}
 	unpack_body(src, length);
 	return 0;
 }
+
+#undef MSG_HEADER_SIZE
