@@ -2,6 +2,8 @@
 
 #include <string>
 #include <cstdint>
+#include <random>
+#include <chrono>
 
 #include "encoding.h"
 
@@ -44,6 +46,10 @@ enum MESSAGE_FLAG
 	FLAG_RBCAST = 1 << 1
 };
 
+// Initialize RNG
+static std::mt19937_64 rng(
+	std::chrono::system_clock::now().time_since_epoch().count());
+
 class Message
 {
 public:
@@ -53,12 +59,12 @@ public:
 	}
 
 	Message(uint8_t type)
-	: type(type)
+	: type(type), flags(0), id(rng())
 	{
 	}
 
 	Message(uint8_t type, uint8_t flags)
-	: type(type), flags(flags)
+	: type(type), flags(flags), id(rng())
 	{
 	}
 
@@ -97,4 +103,5 @@ public:
 	int source;
 	uint8_t type;
 	uint8_t flags;
+	uint64_t id;
 };

@@ -2,20 +2,25 @@
 #include <signal.h>
 #include <iostream>
 
+#include <glog/logging.h>
 #include <cpl/flags.hpp>
 #include <cpl/net/sockaddr.hpp>
 #include <cpl/net/tcp_socket.hpp>
 #include <cpl/net/tcp_connection.hpp>
 
-#include "log.hpp"
 #include "flags.hpp"
 #include "node/node.hpp"
 
 const std::string NAME    = "failure-detector";
-const std::string VERSION = "0.0.1";
+const std::string VERSION = "0.0.2";
 
 int
 main(int argc, char* argv[]) {
+	// Logging setup.
+	google::InitGoogleLogging(argv[0]);
+	FLAGS_logtostderr = 1;
+	LOG(INFO) << "Set up logging";
+
 	// Ignore SIGPIPE. This way we don't exit if we attempt to
 	// write to a closed connection.
 	signal(SIGPIPE, SIG_IGN);
@@ -59,8 +64,8 @@ main(int argc, char* argv[]) {
 		node->connect_to_peer(peer_addrs[i]);
 	}
 
-	std::cerr << NAME << " " << VERSION << " listening on " << addr_str << std::endl;
-	LOG("Unique ID is " << id);
+	LOG(INFO) << NAME << " " << VERSION << " listening on " << addr_str;
+	LOG(INFO) << "Unique ID is " << id;
 	node->run();
 
 	// Unreachable

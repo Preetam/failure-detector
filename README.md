@@ -11,6 +11,24 @@ Building
 You will need a compiler that supports C++14. Only Linux and OS X are supported at the moment,
 but things should be fine on other BSDs.
 
+This repository uses submodules. The following will fetch them if you haven't done so already:
+
+```sh
+$ git submodule update --init --recursive
+```
+
+You'll also need to install glog, a C++ implementation of the Google logging module.
+Installing glog should be as simple as...
+
+```sh
+$ git clone https://github.com/google/glog.git && cd glog
+$ ./configure
+$ make
+$ sudo make install
+```
+
+Finally, you can run the following to build the main program:
+
 ```sh
 $ make       # Build main program
 $ make test  # Runs tests (not that many at this point)

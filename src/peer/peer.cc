@@ -2,11 +2,13 @@
 
 #include "../message/decode.hpp"
 
+#include <future>
+
 void
 Peer :: reconnect() {
 	cpl::RWLock lk(connection_lock, false);
 	last_reconnect = std::chrono::steady_clock::now();
-	LOG("attempting to reconnect to " << address);
+	LOG(INFO) << "attempting to reconnect to " << address;
 	cpl::net::SockAddr addr;
 	int status = addr.parse(address);
 	if (status < 0) {
@@ -15,11 +17,11 @@ Peer :: reconnect() {
 	auto new_connection = std::make_unique<cpl::net::TCP_Connection>();
 	status = new_connection->connect(addr);
 	if (status < 0) {
-		LOG("couldn't reconnect to " << address);
+		LOG(INFO) << "couldn't reconnect to " << address;
 		has_valid_connection = false;
 		return;
 	}
-	LOG("reconnected to " << address);
+	LOG(INFO) << "reconnected to " << address;
 	new_connection->set_timeout(1,0);
 	conn = std::move(new_connection);
 	last_update = std::chrono::steady_clock::now();
@@ -44,6 +46,11 @@ Peer :: read_messages() {
 			}
 		}
 		if (sleep) {
+			if (ms_since_last_reconnect() > 1000) {
+				LOG(INFO) << "attempting to reconnect to " << address;
+				reconnect();
+				continue;
+			}
 			using namespace std::literals;
 			std::this_thread::sleep_for(1000ms);
 			continue;
@@ -53,27 +60,25 @@ Peer :: read_messages() {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				continue;
 			}
-			connection_lock.lock();
+			cpl::RWLock lk(connection_lock, false);
 			has_valid_connection = false;
 			conn = nullptr;
 			active = false;
-			connection_lock.unlock();
 			continue;
 		}
 
 		int status = decode_message(m, buf, len);
 		if (status < 0) {
-			connection_lock.lock();
+			cpl::RWLock lk(connection_lock, false);
 			has_valid_connection = false;
 			conn = nullptr;
 			active = false;
-			connection_lock.unlock();
 			continue;
 		}
+		LOG(INFO) << "got a message from " << local_id;
 		active = true;
 		m->source = local_id;
 		mq->push(std::move(m));
-		last_update = std::chrono::steady_clock::now();
 	}
 
 	active = false;
