@@ -35,6 +35,7 @@ Node :: run() {
 	});
 	
 	while (true) {
+		auto start = std::chrono::steady_clock::now();
 		std::lock_guard<cpl::Mutex> lk(*peers_lock);
 		// This is the main node loop.
 		process_message();
@@ -61,6 +62,12 @@ Node :: run() {
 			} else {
 				LOG(INFO) << "NOT sending a ping to " << peer->address;
 			}
+		}
+
+		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::steady_clock::now() - start).count();
+		if (dur > 1000) {
+			LOG(WARNING) << "Main node loop iteration took over 1000 ms!";
 		}
 	}
 }
