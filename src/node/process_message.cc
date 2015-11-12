@@ -95,7 +95,9 @@ Node :: handle_ident(const Message* m) {
 			new_peer->valid = false;
 			new_peer->active = false;
 			auto conn = std::move(new_peer->get_conn());
-			existing_peer->use_conn(std::move(conn));
+			if (conn != nullptr) {
+				existing_peer->use_conn(std::move(conn));
+			}
 			close_notify_sem->release();
 			return;
 		} else {
