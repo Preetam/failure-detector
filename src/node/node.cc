@@ -52,7 +52,10 @@ Node :: run() {
 		// Pinging.
 		for (int i = 0; i < peers->size(); i++) {
 			auto peer = (*peers)[i];
-			if (peer->valid && peer->active &&
+			if (!peer->valid) {
+				continue;
+			}
+			if (peer->active &&
 				peer->ms_since_last_active() > 1000) {
 				LOG(INFO) << "sending a ping to " << peer->address <<
 					" because it was last active " << peer->ms_since_last_active() <<
@@ -60,7 +63,7 @@ Node :: run() {
 				auto ping = std::make_unique<PingMessage>();
 				peer->send(std::move(ping));
 			} else {
-				LOG(INFO) << "NOT sending a ping to " << peer->address;
+				DLOG(INFO) << "NOT sending a ping to " << peer->address;
 			}
 		}
 

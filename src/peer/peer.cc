@@ -46,7 +46,7 @@ Peer :: read_messages() {
 			}
 		}
 		if (sleep) {
-			if (ms_since_last_reconnect() > 1000) {
+			if (ms_since_last_reconnect() > 1000 && valid) {
 				LOG(INFO) << "attempting to reconnect to " << address;
 				reconnect();
 				continue;
