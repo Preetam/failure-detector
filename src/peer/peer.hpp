@@ -115,6 +115,7 @@ public:
 		conn = std::move(new_connection);
 		has_valid_connection = true;
 		last_update = std::chrono::steady_clock::now();
+		last_reconnect = last_update;
 		active = true;
 		valid = true;
 	}
