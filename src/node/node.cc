@@ -95,12 +95,13 @@ Node :: cleanup_nodes() {
 
 void
 Node :: handle_new_connections() {
+	auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 	while (true) {
-		auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 		int status = 0;
 		if ( (status = sock.accept(conn_ptr.get())) == 0) {
 			conn_ptr->set_timeout(1,0);
 			on_accept(std::move(conn_ptr));
+			conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 		} else {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				std::this_thread::sleep_for(std::chrono::milliseconds(500));
