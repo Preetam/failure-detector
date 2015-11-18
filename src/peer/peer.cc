@@ -22,17 +22,17 @@ Peer :: reconnect() {
 		return;
 	}
 	LOG(INFO) << "reconnected to " << address;
-	new_connection->set_timeout(1,0);
+	new_connection->set_timeout(0, 100);
 	conn = std::move(new_connection);
 	last_update = std::chrono::steady_clock::now();
 	has_valid_connection = true;
 }
 
 void
-Peer :: read_messages() {
+Peer :: run() {
 	// This function runs on a separate thread.
 	// It will not exit until the Peer is destructed.
-	while (run_listener) {
+	while (run_thread) {
 		bool sleep = false;
 		uint8_t buf[16000];
 		int len = 0;
@@ -42,6 +42,11 @@ Peer :: read_messages() {
 			if (!has_valid_connection) {
 				sleep = true;
 			} else {
+				while (send_mq->size() > 0) {
+					auto outbound_msg = send_mq->pop();
+					int packed_size = outbound_msg->pack(buf, 16000);
+					conn->send(buf, packed_size, 0);
+				}
 				len = conn->recv(buf, 16000, 0);
 			}
 		}
@@ -88,11 +93,5 @@ Peer :: read_messages() {
 
 void
 Peer :: send(std::unique_ptr<Message> m) {
-	cpl::RWLock lk(connection_lock, true);
-	if (!has_valid_connection) {
-		return;
-	}
-	uint8_t buf[16000];
-	int packed_size = m->pack(buf, 16000);
-	conn->send(buf, packed_size, 0);
+	send_mq->push(std::move(m));
 }

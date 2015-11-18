@@ -27,14 +27,15 @@ public:
 	  mq(mq),
 	  active(true),
 	  valid(false),
-	  run_listener(true),
+	  run_thread(true),
 	  close_notify_sem(close_notify_sem),
 	  last_update(std::chrono::steady_clock::now()),
-	  has_valid_connection(true)
+	  has_valid_connection(true),
+	  send_mq(std::make_unique<Message_Queue>(64))
 	{ 
 		LOG(INFO) << "new peer connected with local_id " << local_id;
 		thread = std::make_unique<std::thread>([this]() {
-			read_messages();
+			run();
 		});
 	}
 
@@ -50,14 +51,15 @@ public:
 	  mq(mq),
 	  active(false),
 	  valid(true), // since we have a reconnection address
-	  run_listener(true),
+	  run_thread(true),
 	  close_notify_sem(close_notify_sem),
 	  last_update(std::chrono::steady_clock::now()),
-	  has_valid_connection(true)
+	  has_valid_connection(true),
+	  send_mq(std::make_unique<Message_Queue>(64))
 	{
 		LOG(INFO) << "new peer connected with local_id " << local_id;
 		thread = std::make_unique<std::thread>([this]() {
-			read_messages();
+			run();
 		});
 	}
 
@@ -66,14 +68,15 @@ public:
 		 std::shared_ptr<Message_Queue> mq,
 		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
 	: local_id(local_id), unique_id(0), address(address),
-	  mq(mq), active(false), valid(true), run_listener(true),
+	  mq(mq), active(false), valid(true), run_thread(true),
 	  close_notify_sem(close_notify_sem),
 	  last_update(std::chrono::steady_clock::now()),
-	  has_valid_connection(false)
+	  has_valid_connection(false),
+	  send_mq(std::make_unique<Message_Queue>(64))
 	{
 		LOG(INFO) << "new peer connected with local_id " << local_id;
 		thread = std::make_unique<std::thread>([this]() {
-			read_messages();
+			run();
 		});
 	}
 
@@ -132,7 +135,7 @@ public:
 
 	~Peer()
 	{
-		run_listener = false;
+		run_thread = false;
 		LOG(INFO) << "peer[" << local_id << "] disconnected";
 		thread->join();
 	}
@@ -157,8 +160,9 @@ private:
 	std::unique_ptr<std::thread> thread;
 	std::shared_ptr<Message_Queue> mq;
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
-	std::atomic<bool> run_listener;
+	std::atomic<bool> run_thread;
 	std::chrono::time_point<std::chrono::steady_clock> last_reconnect;
+	std::unique_ptr<Message_Queue> send_mq;
 
 	cpl::RWMutex connection_lock;
 	bool has_valid_connection;
@@ -167,5 +171,5 @@ private:
 	std::chrono::time_point<std::chrono::steady_clock> last_update;
 
 	void
-	read_messages();
+	run();
 }; // Peer

@@ -7,7 +7,7 @@
 void
 Node :: process_message() {
 	std::unique_ptr<Message> m;
-	if (mq->pop_with_timeout(m, 500)) {
+	if (mq->pop_with_timeout(m, 50)) {
 		LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
 		switch (m->type) {
 		case MSG_PING:
@@ -37,6 +37,7 @@ Node :: handle_ping(const Message* m) {
 		if (peer->local_id == m->source) {
 			auto response = std::make_unique<PongMessage>();
 			peer->send(std::move(response));
+			peer->mark_updated();
 		}
 	}
 	if (!peer) {
@@ -48,6 +49,7 @@ Node :: handle_ping(const Message* m) {
 		LOG(INFO) << "Got a PING from an invalid Peer! Requesting identity.";
 		auto req = std::make_unique<IdentityRequest>();
 		peer->send(std::move(req));
+		peer->mark_updated();
 	}
 }
 
@@ -133,6 +135,7 @@ MARK_ACTIVE:
 			peer->address = ident_msg->address;
 			peer->valid = true;
 			peer->active = true;
+			peer->mark_updated();
 			break;
 		}
 	}
@@ -147,6 +150,7 @@ Node :: handle_ident_request(const Message* m) {
 			// Just send our identity.
 			auto m = std::make_unique<IdentityMessage>(id, listen_address);
 			peer->send(std::move(m));
+			peer->mark_updated();
 		}
 	}
 }
