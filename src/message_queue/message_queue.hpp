@@ -14,6 +14,12 @@ class Message_Queue
 {
 public:
 	Message_Queue()
+	: capacity(-1)
+	{
+	}
+
+	Message_Queue(size_t capacity)
+	: capacity(capacity)
 	{
 	}
 
@@ -48,4 +54,5 @@ private:
 	std::mutex mutex;
 	std::condition_variable cv;
 	std::queue<unique_message> queue;
+	size_t capacity;
 }; // Message_Queue
