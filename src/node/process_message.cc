@@ -75,58 +75,39 @@ Node :: handle_ident(const Message* m) {
 
 	// Check if this is a preexisting peer
 	if (is_peered(peer_id)) {
-		LOG(INFO) << "Already peered with " << peer_id;
-		// Is it inactive? If it is, then we probably have a new
-		// connection and need to update the existing peer.
-		if (!is_active(peer_id)) {
-			LOG(INFO) << peer_id << " is not active. Will update connection.";
-			// Update the connection.
-			std::shared_ptr<Peer> existing_peer;
-			std::shared_ptr<Peer> new_peer;
-			for (int i = 0; i < peers->size(); i++) {
-				auto peer = (*peers)[i];
-				if (peer->local_id == ident_msg->source) {
-					new_peer = peer;
+		// Make sure it's the same connection.
+		bool same_connection = true;
+		for (int i = 0; i < peers->size(); i++) {
+			auto peer = (*peers)[i];
+			if (peer->unique_id == peer_id) {
+				if (peer->local_id != ident_msg->source) {
+					same_connection = false;
+					break;
 				}
-				if (peer->unique_id == peer_id) {
-					existing_peer = peer;
-				}
-			}
-			new_peer->valid = false;
-			new_peer->active = false;
-			auto conn = std::move(new_peer->get_conn());
-			if (conn != nullptr) {
-				existing_peer->use_conn(std::move(conn));
-			}
-			close_notify_sem->release();
-			return;
-		} else {
-			// Peer is active.
-			// Check if this identity message is from a new connection.
-			bool new_connection = false;
-			for (int i = 0; i < peers->size(); i++) {
-				auto peer = (*peers)[i];
-				if (peer->unique_id == peer_id &&
-					ident_msg->source != peer->local_id) {
-					new_connection = true;
-				}
-			}
-			if (new_connection) {
-				// We have a new connection from an existing,
-				// active peer.
-				// Discard it as a duplicate.
-				LOG(INFO) << "Discarding new connection as a duplicate.";
-				for (int i = 0; i < peers->size(); i++) {
-					auto peer = (*peers)[i];
-					if (peer->local_id == ident_msg->source) {
-						peer->valid = false;
-						break;
-					}
-				}
-				close_notify_sem->release();
-				return;
 			}
 		}
+		if (same_connection) {
+			goto MARK_ACTIVE;
+		}
+		LOG(INFO) << "Already peered with " << peer_id << ". Will update connection.";
+		// Update the connection.
+		std::shared_ptr<Peer> existing_peer;
+		std::shared_ptr<Peer> new_peer;
+		for (int i = 0; i < peers->size(); i++) {
+			auto peer = (*peers)[i];
+			if (peer->local_id == ident_msg->source) {
+				new_peer = peer;
+			}
+			if (peer->unique_id == peer_id) {
+				existing_peer = peer;
+			}
+		}
+		auto conn = std::move(new_peer->get_conn());
+		if (conn != nullptr) {
+			existing_peer->use_conn(std::move(conn));
+		}
+		close_notify_sem->release();
+		return;
 	} else {
 		LOG(INFO) << "Not peered with " << peer_id;
 		// This peer has not been registered.
@@ -143,6 +124,8 @@ Node :: handle_ident(const Message* m) {
 			}
 		}
 	}
+
+MARK_ACTIVE:
 	for (int i = 0; i < peers->size(); i++) {
 		auto peer = (*peers)[i];
 		if (peer->local_id == m->source) {
