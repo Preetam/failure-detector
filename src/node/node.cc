@@ -1,7 +1,4 @@
 #include "node.hpp"
-#include "../message/message.hpp"
-#include "../message/identity_message.hpp"
-#include "../message/ping_pong_message.hpp"
 
 #include <chrono>
 
@@ -54,15 +51,15 @@ Node :: cleanup_nodes() {
 		// Wait until we're signaled that a connection
 		// is closed.
 		close_notify_sem->acquire();
-		std::lock_guard<cpl::Mutex> lk(*peers_lock);
-		LOG(INFO) << "cleaning up invalid peers";
-		for (int i = 0; i < peers->size(); i++) {
-			auto peer = (*peers)[i];
-			if (!peer->valid) {
-				peers->erase(peers->begin()+i);
-				i--;
-			}
-		}
+		// std::lock_guard<cpl::Mutex> lk(*peers_lock);
+		// LOG(INFO) << "cleaning up invalid peers";
+		// for (int i = 0; i < peers->size(); i++) {
+		// 	auto peer = (*peers)[i];
+		// 	if (!peer->valid) {
+		// 		peers->erase(peers->begin()+i);
+		// 		i--;
+		// 	}
+		// }
 	}
 }
 
@@ -89,35 +86,12 @@ Node :: handle_new_connections() {
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 	peers_lock->lock();
-	auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr), mq, close_notify_sem);
-	peer->active = true;
-	// Send our identity to the new peer.
-	auto m = std::make_unique<IdentityMessage>(id, listen_address);
-	peer->send(std::move(m));
-	peers->push_back(std::move(peer));
-	id_counter++;
+	// auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr), mq, close_notify_sem);
+	// peer->active = true;
+	// // Send our identity to the new peer.
+	// auto m = std::make_unique<IdentityMessage>(id, listen_address);
+	// peer->send(std::move(m));
+	// peers->push_back(std::move(peer));
+	// id_counter++;
 	peers_lock->unlock();
-}
-
-bool
-Node :: is_peered(uint64_t peer_id) {
-	for (int i = 0; i < peers->size(); i++) {
-		auto peer = (*peers)[i];
-		if (peer->valid && peer->unique_id == peer_id) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool
-Node :: is_active(uint64_t peer_id) {
-	for (int i = 0; i < peers->size(); i++) {
-		auto peer = (*peers)[i];
-		if (peer->valid &&
-			peer->active && peer->unique_id == peer_id) {
-			return true;
-		}
-	}
-	return false;
 }

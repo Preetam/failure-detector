@@ -8,7 +8,7 @@
 class MessageTimes
 {
 	using time_point = std::chrono::steady_clock::time_point;
-	using map_type = std::unordered_map<MESSAGE_TYPE, time_point>>;
+	using map_type = std::unordered_map<MESSAGE_TYPE, time_point>;
 public:
 	MessageTimes()
 	{
@@ -22,7 +22,7 @@ public:
 
 	int ms_since(MESSAGE_TYPE m_type)
 	{
-		std::chrono::duration_cast<std::chrono::milliseconds>(
+		return std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::steady_clock::now() - m[m_type]
 		).count();
 	}

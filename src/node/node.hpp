@@ -11,6 +11,10 @@
 #include <cpl/semaphore.hpp>
 #include <cpl/mutex.hpp>
 
+#include "message/identity_message.hpp"
+#include "message/message.hpp"
+#include "message/identity_message.hpp"
+#include "message/ping_pong_message.hpp"
 #include "message_queue/message_queue.hpp"
 #include "peer/peer.hpp"
 
@@ -47,6 +51,9 @@ public:
 private:
 	uint64_t id;
 	std::string listen_address;
+	cpl::net::TCP_Socket sock;
+	std::shared_ptr<Message_Queue> mq;
+	int id_counter;
 
 	// process_message processes a single message in the inbound
 	// message queue. This function blocks up to 33 milliseconds.
@@ -67,10 +74,6 @@ private:
 	// whenever a new connection is accepted.
 	void
 	on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr);
-
-	int id_counter;
-	cpl::net::TCP_Socket sock;
-	std::shared_ptr<Message_Queue> mq;
 
 	// Vector of peers, protected by a mutex.
 	std::shared_ptr<cpl::Mutex> peers_lock;
