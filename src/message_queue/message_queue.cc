@@ -31,6 +31,9 @@ void
 Message_Queue :: push(unique_message m) {
 	std::unique_lock<std::mutex> lk(mutex);
 	queue.push(std::move(m));
+	while (capacity > 0 && queue.size() > capacity) {
+		queue.pop();
+	}
 	cv.notify_one();
 }
 

@@ -20,13 +20,6 @@ using shared_peer = std::shared_ptr<Peer>;
 class Node
 {
 public:
-	// start starts a node listening at address.
-	// A negative value is returned for errors.
-	int start(std::string address);
-
-	// run starts the main processing routine.
-	void run();
-
 	Node(uint64_t id)
 	: id(id),
 	  id_counter(1),
@@ -36,6 +29,13 @@ public:
 	  close_notify_sem(std::make_shared<cpl::Semaphore>(0))
 	{
 	}
+
+	// start starts a node listening at address.
+	// A negative value is returned for errors.
+	int start(std::string address);
+
+	// run starts the main processing routine.
+	void run();
 
 	// connect_to_peer connects to a peer with the given
 	// address and creates a new Peer instance for the node.
@@ -80,7 +80,6 @@ private:
 	// whenever a Peer connection closes.
 	std::shared_ptr<cpl::Semaphore> close_notify_sem;
 
-private:
 	// is_peered returns true if peer_id matches the unique ID
 	// of an existing peer.
 	bool
