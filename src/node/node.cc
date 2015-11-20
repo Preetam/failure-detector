@@ -40,33 +40,6 @@ Node :: run() {
 		// This is the main node loop.
 		process_message();
 
-		// Cleanup check.
-		for (int i = 0; i < peers->size(); i++) {
-			auto peer = (*peers)[i];
-			if (!peer->valid && !peer->active) {
-				close_notify_sem->release();
-				continue;
-			}
-		}
-
-		// Pinging.
-		for (int i = 0; i < peers->size(); i++) {
-			auto peer = (*peers)[i];
-			if (!peer->valid) {
-				continue;
-			}
-			if (peer->active &&
-				peer->ms_since_last_active() > 1000) {
-				LOG(INFO) << "sending a ping to " << peer->address <<
-					" because it was last active " << peer->ms_since_last_active() <<
-					" ms ago";
-				auto ping = std::make_unique<PingMessage>();
-				peer->send(std::move(ping));
-			} else {
-				DLOG(INFO) << "NOT sending a ping to " << peer->address;
-			}
-		}
-
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::steady_clock::now() - start).count();
 		if (dur > 1000) {

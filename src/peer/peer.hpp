@@ -84,25 +84,25 @@ public:
 	void
 	send(std::unique_ptr<Message>);
 
-	int
-	ms_since_last_active()
-	{
-		std::lock_guard<cpl::Mutex> lk(update_lock);
-		auto now = std::chrono::steady_clock::now();
-		return std::chrono::duration_cast<std::chrono::milliseconds>(now-last_update).count();
-	}
+	// int
+	// ms_since_last_active()
+	// {
+	// 	std::lock_guard<cpl::Mutex> lk(update_lock);
+	// 	auto now = std::chrono::steady_clock::now();
+	// 	return std::chrono::duration_cast<std::chrono::milliseconds>(now-last_update).count();
+	// }
 
-	int
-	ms_since_last_reconnect()
-	{
-		auto now = std::chrono::steady_clock::now();
-		return std::chrono::duration_cast<std::chrono::milliseconds>(now-last_reconnect).count();
-	}
+	// int
+	// ms_since_last_reconnect()
+	// {
+	// 	auto now = std::chrono::steady_clock::now();
+	// 	return std::chrono::duration_cast<std::chrono::milliseconds>(now-last_reconnect).count();
+	// }
 
 	std::unique_ptr<cpl::net::TCP_Connection>
 	get_conn()
 	{
-		cpl::RWLock lk(connection_lock, false);
+		cpl::RWLock lk(connection_lock, cpl::RWLock::Writer);
 		has_valid_connection = false;
 		valid = false;
 		active = false;
@@ -114,7 +114,7 @@ public:
 	void
 	use_conn(std::unique_ptr<cpl::net::TCP_Connection> new_connection)
 	{
-		cpl::RWLock lk(connection_lock, false);
+		cpl::RWLock lk(connection_lock, cpl::RWLock::Writer);
 		conn = std::move(new_connection);
 		has_valid_connection = true;
 		last_update = std::chrono::steady_clock::now();
@@ -122,16 +122,6 @@ public:
 		active = true;
 		valid = true;
 	}
-
-	void
-	mark_updated()
-	{
-		std::lock_guard<cpl::Mutex> lk(update_lock);
-		last_update = std::chrono::steady_clock::now();
-	}
-
-	void
-	reconnect();
 
 	~Peer()
 	{
@@ -172,4 +162,7 @@ private:
 
 	void
 	run();
+
+	void
+	reconnect();
 }; // Peer

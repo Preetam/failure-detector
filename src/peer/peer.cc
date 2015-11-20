@@ -6,7 +6,7 @@
 
 void
 Peer :: reconnect() {
-	cpl::RWLock lk(connection_lock, false);
+	cpl::RWLock lk(connection_lock, cpl::RWLock::Writer);
 	last_reconnect = std::chrono::steady_clock::now();
 	LOG(INFO) << "attempting to reconnect to " << address;
 	cpl::net::SockAddr addr;
@@ -38,7 +38,7 @@ Peer :: run() {
 		int len = 0;
 		std::unique_ptr<Message> m;
 		{
-			cpl::RWLock lk(connection_lock, true);
+			cpl::RWLock lk(connection_lock, cpl::RWLock::Reader);
 			if (!has_valid_connection) {
 				sleep = true;
 			} else {
@@ -51,11 +51,11 @@ Peer :: run() {
 			}
 		}
 		if (sleep) {
-			if (ms_since_last_reconnect() > 1000 && valid) {
-				LOG(INFO) << "attempting to reconnect to " << address;
-				reconnect();
-				continue;
-			}
+			//if (ms_since_last_reconnect() > 1000 && valid) {
+			//	LOG(INFO) << "attempting to reconnect to " << address;
+			//	reconnect();
+			//	continue;
+			//}
 			using namespace std::literals;
 			std::this_thread::sleep_for(1000ms);
 			continue;
@@ -65,7 +65,7 @@ Peer :: run() {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				continue;
 			}
-			cpl::RWLock lk(connection_lock, false);
+			cpl::RWLock lk(connection_lock, cpl::RWLock::Writer);
 			has_valid_connection = false;
 			conn = nullptr;
 			active = false;
@@ -74,7 +74,7 @@ Peer :: run() {
 
 		int status = decode_message(m, buf, len);
 		if (status < 0) {
-			cpl::RWLock lk(connection_lock, false);
+			cpl::RWLock lk(connection_lock, cpl::RWLock::Writer);
 			has_valid_connection = false;
 			conn = nullptr;
 			active = false;
