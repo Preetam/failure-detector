@@ -1,7 +1,5 @@
 #include "node.hpp"
 
-#include <chrono>
-
 int
 Node :: start(std::string address) {
 	cpl::net::SockAddr addr;
@@ -25,7 +23,7 @@ Node :: start(std::string address) {
 void
 Node :: run() {
 	std::thread cleanup([this]() {
-		cleanup_nodes();
+		cleanup_peers();
 	});
 	std::thread conn_accept_thread([this]() {
 		handle_new_connections();
@@ -46,20 +44,12 @@ Node :: run() {
 }
 
 void
-Node :: cleanup_nodes() {
+Node :: cleanup_peers() {
 	while (true) {
 		// Wait until we're signaled that a connection
 		// is closed.
 		close_notify_sem->acquire();
-		// std::lock_guard<cpl::Mutex> lk(*peers_lock);
-		// LOG(INFO) << "cleaning up invalid peers";
-		// for (int i = 0; i < peers->size(); i++) {
-		// 	auto peer = (*peers)[i];
-		// 	if (!peer->valid) {
-		// 		peers->erase(peers->begin()+i);
-		// 		i--;
-		// 	}
-		// }
+		// TODO: clean up garbage peers
 	}
 }
 
@@ -86,12 +76,57 @@ Node :: handle_new_connections() {
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 	peers_lock->lock();
-	// auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr), mq, close_notify_sem);
-	// peer->active = true;
-	// // Send our identity to the new peer.
-	// auto m = std::make_unique<IdentityMessage>(id, listen_address);
-	// peer->send(std::move(m));
-	// peers->push_back(std::move(peer));
-	// id_counter++;
+	// TODO: create a new peer with conn_ptr
 	peers_lock->unlock();
+}
+
+void
+Node :: connect_to_peer(cpl::net::SockAddr address) {
+	peers_lock->lock();
+	// TODO: create a new connection and connect.
+	peers_lock->unlock();
+}
+
+void
+Node :: process_message() {
+	std::unique_ptr<Message> m;
+	if (mq->pop_with_timeout(m, 50)) {
+		LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
+		switch (m->type) {
+		case MSG_PING:
+			handle_ping(m.get());
+			break;
+		case MSG_PONG:
+			handle_pong(m.get());
+			break;
+		case MSG_IDENT:
+			handle_ident(m.get());
+			break;
+		case MSG_IDENT_REQUEST:
+			handle_ident_request(m.get());
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void
+Node :: handle_ping(const Message* m) {
+	// TODO
+}
+
+void
+Node :: handle_pong(const Message* m) {
+	// TODO
+}
+
+void
+Node :: handle_ident(const Message* m) {
+	// TODO
+}
+
+void
+Node :: handle_ident_request(const Message* m) {
+	// TODO
 }

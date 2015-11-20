@@ -60,10 +60,10 @@ private:
 	void
 	process_message();
 
-	// cleanup_nodes runs in a separate thread to clean up
+	// cleanup_peers runs in a separate thread to clean up
 	// disconnected Peer instances.
 	void
-	cleanup_nodes();
+	cleanup_peers();
 
 	// handle_new_connections runs in a separate thread to
 	// accept new connections.
