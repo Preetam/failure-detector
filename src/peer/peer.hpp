@@ -41,6 +41,12 @@ public:
 		});
 	}
 
+	uint64_t
+	id() const
+	{
+		return m_id;
+	}
+
 	void
 	set_address(const std::string& address)
 	{

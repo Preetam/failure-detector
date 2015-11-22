@@ -76,14 +76,6 @@ private:
 	void
 	on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr);
 
-	// is_peered returns true if peer_id matches the unique ID
-	// of an existing peer.
-	bool
-	is_peered(uint64_t peer_id);
-
-	bool
-	is_active(uint64_t peer_id);
-
 	// Message handlers
 	void
 	handle_ping(const Message&);
