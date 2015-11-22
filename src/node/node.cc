@@ -59,7 +59,7 @@ Node :: handle_new_connections() {
 	while (true) {
 		int status = 0;
 		if ( (status = m_sock.accept(conn_ptr.get())) == 0) {
-			conn_ptr->set_timeout(1,0);
+			conn_ptr->set_timeout(0, 33);
 			on_accept(std::move(conn_ptr));
 			conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 		} else {
@@ -95,7 +95,7 @@ Node :: connect_to_peer(const cpl::net::SockAddr& address) {
 		peer_conn = nullptr;
 	} else {
 		LOG(INFO) << "successfully connected to " << address;
-		peer_conn->set_timeout(1,0);
+		peer_conn->set_timeout(0,33);
 	}
 	auto next_id = ++m_index_counter;
 	peer = std::make_shared<Peer>(next_id, std::move(peer_conn), m_mq, m_close_notify_sem);
@@ -143,7 +143,9 @@ Node :: handle_pong(const Message& m) {
 
 void
 Node :: handle_ident(const Message& m) {
-	// TODO
+	auto ident_msg = static_cast<const IdentityMessage&>(m);
+	m_registry->set_identity(ident_msg.source, ident_msg.id, ident_msg.address);
+	LOG(INFO) << ident_msg.source << " has ID " << ident_msg.id << " and address " << ident_msg.address;
 }
 
 void

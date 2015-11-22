@@ -41,6 +41,19 @@ public:
 		});
 	}
 
+	Peer& operator =(Peer&& rhs)
+	{
+		rhs.m_run_thread = false;
+		m_address = rhs.m_address;
+		m_conn = std::move(rhs.m_conn);
+		rhs.m_conn = nullptr;
+		return *this;
+	}
+
+	// Disable copying.
+	Peer(Peer& rhs) = delete;
+	Peer& operator =(Peer& rhs) = delete;
+
 	uint64_t
 	id() const
 	{
@@ -48,8 +61,16 @@ public:
 	}
 
 	void
+	set_id(uint64_t id)
+	{
+		cpl::RWLock lk(*m_mtx, cpl::RWLock::Writer);
+		m_id = id;
+	}
+
+	void
 	set_address(const std::string& address)
 	{
+		cpl::RWLock lk(*m_mtx, cpl::RWLock::Writer);
 		LOG(INFO) << index_prefix() << "has address '" << address << "'";
 		m_address = address;
 	}

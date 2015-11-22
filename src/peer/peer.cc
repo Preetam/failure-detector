@@ -40,9 +40,9 @@ Peer :: run(std::shared_ptr<cpl::Semaphore> close_notify_sem) {
 			}
 		}
 		auto elapsed = std::chrono::steady_clock::now() - start;
-		if (elapsed < std::chrono::milliseconds(100)) {
+		if (elapsed < std::chrono::milliseconds(33)) {
 			// Make sure we don't loop too frequently.
-			std::this_thread::sleep_for(std::chrono::milliseconds(100) - elapsed);
+			std::this_thread::sleep_for(std::chrono::milliseconds(33) - elapsed);
 		}
 	}
 	LOG(INFO) << index_prefix() << "ending peer thread";
@@ -83,6 +83,7 @@ Peer :: reconnect() {
 		m_address;
 	new_connection->set_timeout(1,0);
 	m_conn = std::move(new_connection);
+	send_message(std::make_unique<IdentityMessage>(m_ident_msg.id, m_ident_msg.address));
 }
 
 int
