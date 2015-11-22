@@ -14,6 +14,7 @@
 #include "message/decode.hpp"
 #include "message/message_times.hpp"
 #include "message_queue/message_queue.hpp"
+#include "message/identity_message.hpp"
 
 class Peer
 {
@@ -47,6 +48,24 @@ public:
 		m_address = address;
 	}
 
+	void
+	set_identity_message(const IdentityMessage& m)
+	{
+		m_ident_msg = m;
+	}
+
+	void
+	send_message(std::unique_ptr<Message> m)
+	{
+		m_send_mq->push(std::move(m));
+	}
+
+	void
+	stop()
+	{
+		m_run_thread = false;
+	}
+
 	bool
 	done()
 	{
@@ -74,6 +93,7 @@ private:
 	std::unique_ptr<std::thread>    m_thread;
 	std::shared_ptr<cpl::RWMutex>   m_mtx;
 	std::atomic<bool>               m_done;
+	IdentityMessage                 m_ident_msg;
 
 	void
 	run(std::shared_ptr<cpl::Semaphore>);

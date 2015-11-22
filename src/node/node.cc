@@ -77,6 +77,10 @@ void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 	auto next_id = ++m_index_counter;
 	auto peer = std::make_shared<Peer>(next_id, std::move(conn_ptr), m_mq, m_close_notify_sem);
+	auto msg = std::make_unique<IdentityMessage>(m_id, m_listen_address);
+	peer->set_identity_message(*msg);
+	// Send our identity to the new peer.
+	peer->send_message(std::move(msg));
 	m_registry->register_peer(next_id, peer);
 }
 
@@ -96,6 +100,10 @@ Node :: connect_to_peer(const cpl::net::SockAddr& address) {
 	auto next_id = ++m_index_counter;
 	peer = std::make_shared<Peer>(next_id, std::move(peer_conn), m_mq, m_close_notify_sem);
 	peer->set_address(address.str());
+	auto msg = std::make_unique<IdentityMessage>(m_id, m_listen_address);
+	peer->set_identity_message(*msg);
+	// Send our identity to the new peer.
+	peer->send_message(std::move(msg));
 	m_registry->register_peer(next_id, peer);
 }
 
