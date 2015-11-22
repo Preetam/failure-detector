@@ -20,6 +20,18 @@ public:
 	}
 
 	void
+	send_message_to_index(int index, std::unique_ptr<Message> m)
+	{
+		// TODO
+	}
+
+	void
+	send_message_to_id(uint64_t id, std::unique_ptr<Message> m)
+	{
+		// TODO
+	}
+
+	void
 	cleanup_done_peers()
 	{
 		for (auto i = std::begin(m_peers); i != std::end(m_peers); ) {
