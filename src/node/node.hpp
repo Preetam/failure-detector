@@ -9,7 +9,6 @@
 #include <cpl/net/sockaddr.hpp>
 #include <cpl/net/tcp_socket.hpp>
 #include <cpl/semaphore.hpp>
-#include <cpl/mutex.hpp>
 
 #include "message/identity_message.hpp"
 #include "message/message.hpp"
@@ -17,9 +16,7 @@
 #include "message/ping_pong_message.hpp"
 #include "message_queue/message_queue.hpp"
 #include "peer/peer.hpp"
-
-template <typename T> using shared_vector = std::shared_ptr<std::vector<T>>;
-using shared_peer = std::shared_ptr<Peer>;
+#include "peer_registry.hpp"
 
 class Node
 {
@@ -27,8 +24,7 @@ public:
 	Node(uint64_t id)
 	: m_id(id),
 	  m_mq(std::make_shared<Message_Queue>()),
-	  m_peers_lock(std::make_shared<cpl::Mutex>()),
-	  m_peers(std::make_shared<std::vector<shared_peer>>()),
+	  m_registry(std::make_shared<PeerRegistry>()),
 	  m_close_notify_sem(std::make_shared<cpl::Semaphore>(0))
 	{
 	}
@@ -54,9 +50,7 @@ private:
 	std::string                     m_listen_address;
 	cpl::net::TCP_Socket            m_sock;
 	std::shared_ptr<Message_Queue>  m_mq;
-	// Vector of peers, protected by a mutex.
-	std::shared_ptr<cpl::Mutex>     m_peers_lock;
-	shared_vector<shared_peer>      m_peers;
+	std::shared_ptr<PeerRegistry>   m_registry;
 	// close_notify_sem notifies the cleanup thread
 	// whenever a Peer connection closes.
 	std::shared_ptr<cpl::Semaphore> m_close_notify_sem;

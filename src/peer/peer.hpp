@@ -11,28 +11,53 @@
 #include <cpl/semaphore.hpp>
 #include <cpl/rwmutex.hpp>
 
+#include "message/decode.hpp"
 #include "message/message_times.hpp"
 #include "message_queue/message_queue.hpp"
 
 class Peer
 {
+	using uq_tcp_conn = std::unique_ptr<cpl::net::TCP_Connection>;
+
 public:
 	Peer(int index,
-		 std::unique_ptr<cpl::net::TCP_Connection> conn,
+		 uq_tcp_conn conn,
 		 std::shared_ptr<Message_Queue> mq,
 		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
 	: m_index(index),
 	  m_id(0),
 	  m_address(""),
-	  m_run_thread(true)
+	  m_conn(std::move(conn)),
+	  m_mq(mq),
+	  m_send_mq(std::make_shared<Message_Queue>(16)),
+	  m_run_thread(true),
+	  m_mtx(std::make_shared<cpl::RWMutex>()),
+	  m_done(false)
 	{
-		LOG(INFO) << "new peer created with index " << m_index;
+		LOG(INFO) << index_prefix() << "new peer created";
+		m_thread = std::make_unique<std::thread>([this, close_notify_sem]() {
+			run(close_notify_sem);
+		});
 	}
 
 	void
 	set_address(const std::string& address)
 	{
+		LOG(INFO) << index_prefix() << "has address '" << address << "'";
 		m_address = address;
+	}
+
+	bool
+	done()
+	{
+		return m_done;
+	}
+
+	~Peer()
+	{
+		m_run_thread = false;
+		m_thread->join();
+		LOG(INFO) << index_prefix() << "peer deleted";
 	}
 
 private:
@@ -42,9 +67,29 @@ private:
 	uint64_t                        m_id;
 	// Reconnection address (sent by peer)
 	std::string                     m_address;
+	uq_tcp_conn                     m_conn;
+	std::shared_ptr<Message_Queue>  m_mq;
+	std::shared_ptr<Message_Queue>  m_send_mq;
 	std::atomic<bool>               m_run_thread;
 	std::unique_ptr<std::thread>    m_thread;
+	std::shared_ptr<cpl::RWMutex>   m_mtx;
+	std::atomic<bool>               m_done;
 
 	void
 	run(std::shared_ptr<cpl::Semaphore>);
+
+	void
+	reconnect();
+
+	int
+	read_message();
+
+	int
+	write_message();
+
+	inline std::string
+	index_prefix()
+	{
+		return "[" + std::to_string(m_index) + "] ";
+	}
 }; // Peer

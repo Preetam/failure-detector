@@ -31,7 +31,6 @@ Node :: run() {
 	
 	while (true) {
 		auto start = std::chrono::steady_clock::now();
-		std::lock_guard<cpl::Mutex> lk(*m_peers_lock);
 		// This is the main node loop.
 		process_message();
 
@@ -50,7 +49,7 @@ Node :: cleanup_peers() {
 		// Wait until we're signaled that a connection
 		// is closed.
 		m_close_notify_sem->acquire();
-		// TODO: clean up garbage peers
+		m_registry->cleanup_done_peers();
 	}
 }
 
@@ -76,13 +75,13 @@ Node :: handle_new_connections() {
 
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
-	std::lock_guard<cpl::Mutex> lk(*m_peers_lock);
-	// TODO: create a new peer with conn_ptr
+	auto next_id = ++m_index_counter;
+	auto peer = std::make_shared<Peer>(next_id, std::move(conn_ptr), m_mq, m_close_notify_sem);
+	m_registry->register_peer(next_id, peer);
 }
 
 void
 Node :: connect_to_peer(const cpl::net::SockAddr& address) {
-	std::lock_guard<cpl::Mutex> lk(*m_peers_lock);
 	auto peer_conn = std::make_unique<cpl::net::TCP_Connection>();
 	std::shared_ptr<Peer> peer;
 	// Attempt to connect.
@@ -94,8 +93,10 @@ Node :: connect_to_peer(const cpl::net::SockAddr& address) {
 		LOG(INFO) << "successfully connected to " << address;
 		peer_conn->set_timeout(1,0);
 	}
-	peer = std::make_shared<Peer>(m_index_counter++, std::move(peer_conn), m_mq, m_close_notify_sem);
+	auto next_id = ++m_index_counter;
+	peer = std::make_shared<Peer>(next_id, std::move(peer_conn), m_mq, m_close_notify_sem);
 	peer->set_address(address.str());
+	m_registry->register_peer(next_id, peer);
 }
 
 void
