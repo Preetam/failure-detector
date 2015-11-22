@@ -114,16 +114,16 @@ Node :: process_message() {
 		LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
 		switch (m->type) {
 		case MSG_PING:
-			handle_ping(m.get());
+			handle_ping(*m);
 			break;
 		case MSG_PONG:
-			handle_pong(m.get());
+			handle_pong(*m);
 			break;
 		case MSG_IDENT:
-			handle_ident(m.get());
+			handle_ident(*m);
 			break;
 		case MSG_IDENT_REQUEST:
-			handle_ident_request(m.get());
+			handle_ident_request(*m);
 			break;
 		default:
 			break;
@@ -132,21 +132,21 @@ Node :: process_message() {
 }
 
 void
-Node :: handle_ping(const Message* m) {
+Node :: handle_ping(const Message& m) {
 	// TODO
 }
 
 void
-Node :: handle_pong(const Message* m) {
+Node :: handle_pong(const Message& m) {
 	// TODO
 }
 
 void
-Node :: handle_ident(const Message* m) {
+Node :: handle_ident(const Message& m) {
 	// TODO
 }
 
 void
-Node :: handle_ident_request(const Message* m) {
+Node :: handle_ident_request(const Message& m) {
 	// TODO
 }

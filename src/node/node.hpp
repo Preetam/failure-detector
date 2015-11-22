@@ -86,11 +86,11 @@ private:
 
 	// Message handlers
 	void
-	handle_ping(const Message*);
+	handle_ping(const Message&);
 	void
-	handle_pong(const Message*);
+	handle_pong(const Message&);
 	void
-	handle_ident(const Message*);
+	handle_ident(const Message&);
 	void
-	handle_ident_request(const Message*);
+	handle_ident_request(const Message&);
 }; // Node
