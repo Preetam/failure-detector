@@ -1,3 +1,4 @@
+#include <memory>
 #include <cstring>
 
 #include "message.hpp"
