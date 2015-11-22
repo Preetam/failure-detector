@@ -7,7 +7,7 @@
 
 #include "encoding.h"
 
-enum MESSAGE_TYPE
+enum MESSAGE_TYPE : uint8_t
 {
 	// Invalid
 	MSG_INVALID,

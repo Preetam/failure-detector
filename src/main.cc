@@ -12,7 +12,7 @@
 #include "node/node.hpp"
 
 const std::string NAME    = "failure-detector";
-const std::string VERSION = "0.0.3";
+const std::string VERSION = "0.0.4";
 
 int
 main(int argc, char* argv[]) {
@@ -47,7 +47,7 @@ main(int argc, char* argv[]) {
 	}
 
 	if (id == 0) {
-		std::cerr << "--id flag unset. Please specify a unique node ID." << std::endl;
+		std::cerr << "--id flag unset. Please specify a nonzero unique node ID." << std::endl;
 		return 1;
 	}
 

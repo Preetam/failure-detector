@@ -1,9 +1,4 @@
 #include "node.hpp"
-#include "../message/message.hpp"
-#include "../message/identity_message.hpp"
-#include "../message/ping_pong_message.hpp"
-
-#include <chrono>
 
 int
 Node :: start(std::string address) {
@@ -13,22 +8,22 @@ Node :: start(std::string address) {
 	if (status < 0) {
 		return status;
 	}
-	status = sock.bind(addr);
+	status = m_sock.bind(addr);
 	if (status < 0) {
 		return status;
 	}
-	status = sock.listen();
+	status = m_sock.listen();
 	if (status < 0) {
 		return status;
 	}
-	listen_address = address;
+	m_listen_address = address;
 	return 0;
 }
 
 void
 Node :: run() {
 	std::thread cleanup([this]() {
-		cleanup_nodes();
+		cleanup_peers();
 	});
 	std::thread conn_accept_thread([this]() {
 		handle_new_connections();
@@ -36,36 +31,8 @@ Node :: run() {
 	
 	while (true) {
 		auto start = std::chrono::steady_clock::now();
-		std::lock_guard<cpl::Mutex> lk(*peers_lock);
 		// This is the main node loop.
 		process_message();
-
-		// Cleanup check.
-		for (int i = 0; i < peers->size(); i++) {
-			auto peer = (*peers)[i];
-			if (!peer->valid && !peer->active) {
-				close_notify_sem->release();
-				continue;
-			}
-		}
-
-		// Pinging.
-		for (int i = 0; i < peers->size(); i++) {
-			auto peer = (*peers)[i];
-			if (!peer->valid) {
-				continue;
-			}
-			if (peer->active &&
-				peer->ms_since_last_active() > 1000) {
-				LOG(INFO) << "sending a ping to " << peer->address <<
-					" because it was last active " << peer->ms_since_last_active() <<
-					" ms ago";
-				auto ping = std::make_unique<PingMessage>();
-				peer->send(std::move(ping));
-			} else {
-				DLOG(INFO) << "NOT sending a ping to " << peer->address;
-			}
-		}
 
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::steady_clock::now() - start).count();
@@ -73,23 +40,16 @@ Node :: run() {
 			LOG(WARNING) << "Main node loop iteration took over 1000 ms!";
 		}
 	}
+	// Unreachable
 }
 
 void
-Node :: cleanup_nodes() {
+Node :: cleanup_peers() {
 	while (true) {
 		// Wait until we're signaled that a connection
 		// is closed.
-		close_notify_sem->acquire();
-		std::lock_guard<cpl::Mutex> lk(*peers_lock);
-		LOG(INFO) << "cleaning up invalid peers";
-		for (int i = 0; i < peers->size(); i++) {
-			auto peer = (*peers)[i];
-			if (!peer->valid) {
-				peers->erase(peers->begin()+i);
-				i--;
-			}
-		}
+		m_close_notify_sem->acquire();
+		m_registry->cleanup_done_peers();
 	}
 }
 
@@ -98,8 +58,8 @@ Node :: handle_new_connections() {
 	auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 	while (true) {
 		int status = 0;
-		if ( (status = sock.accept(conn_ptr.get())) == 0) {
-			conn_ptr->set_timeout(1,0);
+		if ( (status = m_sock.accept(conn_ptr.get())) == 0) {
+			conn_ptr->set_timeout(0, 33);
 			on_accept(std::move(conn_ptr));
 			conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 		} else {
@@ -115,36 +75,80 @@ Node :: handle_new_connections() {
 
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
-	peers_lock->lock();
-	auto peer = std::make_shared<Peer>(id_counter, std::move(conn_ptr), mq, close_notify_sem);
-	peer->active = true;
+	auto next_id = ++m_index_counter;
+	auto peer = std::make_shared<Peer>(next_id, std::move(conn_ptr), m_mq, m_close_notify_sem);
+	auto msg = std::make_unique<IdentityMessage>(m_id, m_listen_address);
+	peer->set_identity_message(*msg);
 	// Send our identity to the new peer.
-	auto m = std::make_unique<IdentityMessage>(id, listen_address);
-	peer->send(std::move(m));
-	peers->push_back(std::move(peer));
-	id_counter++;
-	peers_lock->unlock();
+	peer->send_message(std::move(msg));
+	m_registry->register_peer(next_id, peer);
 }
 
-bool
-Node :: is_peered(uint64_t peer_id) {
-	for (int i = 0; i < peers->size(); i++) {
-		auto peer = (*peers)[i];
-		if (peer->valid && peer->unique_id == peer_id) {
-			return true;
-		}
+void
+Node :: connect_to_peer(const cpl::net::SockAddr& address) {
+	auto peer_conn = std::make_unique<cpl::net::TCP_Connection>();
+	std::shared_ptr<Peer> peer;
+	// Attempt to connect.
+	int status = peer_conn->connect(address);
+	if (status < 0) {
+		LOG(WARNING) << "unable to connect to " << address;
+		peer_conn = nullptr;
+	} else {
+		LOG(INFO) << "successfully connected to " << address;
+		peer_conn->set_timeout(0,33);
 	}
-	return false;
+	auto next_id = ++m_index_counter;
+	peer = std::make_shared<Peer>(next_id, std::move(peer_conn), m_mq, m_close_notify_sem);
+	peer->set_address(address.str());
+	auto msg = std::make_unique<IdentityMessage>(m_id, m_listen_address);
+	peer->set_identity_message(*msg);
+	// Send our identity to the new peer.
+	peer->send_message(std::move(msg));
+	m_registry->register_peer(next_id, peer);
 }
 
-bool
-Node :: is_active(uint64_t peer_id) {
-	for (int i = 0; i < peers->size(); i++) {
-		auto peer = (*peers)[i];
-		if (peer->valid &&
-			peer->active && peer->unique_id == peer_id) {
-			return true;
+void
+Node :: process_message() {
+	std::unique_ptr<Message> m;
+	if (m_mq->pop_with_timeout(m, 50)) {
+		LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
+		switch (m->type) {
+		case MSG_PING:
+			handle_ping(*m);
+			break;
+		case MSG_PONG:
+			handle_pong(*m);
+			break;
+		case MSG_IDENT:
+			handle_ident(*m);
+			break;
+		case MSG_IDENT_REQUEST:
+			handle_ident_request(*m);
+			break;
+		default:
+			break;
 		}
 	}
-	return false;
+}
+
+void
+Node :: handle_ping(const Message& m) {
+	// TODO
+}
+
+void
+Node :: handle_pong(const Message& m) {
+	// TODO
+}
+
+void
+Node :: handle_ident(const Message& m) {
+	auto ident_msg = static_cast<const IdentityMessage&>(m);
+	m_registry->set_identity(ident_msg.source, ident_msg.id, ident_msg.address);
+	LOG(INFO) << ident_msg.source << " has ID " << ident_msg.id << " and address " << ident_msg.address;
+}
+
+void
+Node :: handle_ident_request(const Message& m) {
+	// TODO
 }
