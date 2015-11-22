@@ -47,7 +47,7 @@ main(int argc, char* argv[]) {
 	}
 
 	if (id == 0) {
-		std::cerr << "--id flag unset. Please specify a unique node ID." << std::endl;
+		std::cerr << "--id flag unset. Please specify a nonzero unique node ID." << std::endl;
 		return 1;
 	}
 

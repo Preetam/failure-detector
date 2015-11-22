@@ -8,15 +8,15 @@ Node :: start(std::string address) {
 	if (status < 0) {
 		return status;
 	}
-	status = sock.bind(addr);
+	status = m_sock.bind(addr);
 	if (status < 0) {
 		return status;
 	}
-	status = sock.listen();
+	status = m_sock.listen();
 	if (status < 0) {
 		return status;
 	}
-	listen_address = address;
+	m_listen_address = address;
 	return 0;
 }
 
@@ -31,7 +31,7 @@ Node :: run() {
 	
 	while (true) {
 		auto start = std::chrono::steady_clock::now();
-		std::lock_guard<cpl::Mutex> lk(*peers_lock);
+		std::lock_guard<cpl::Mutex> lk(*m_peers_lock);
 		// This is the main node loop.
 		process_message();
 
@@ -48,7 +48,7 @@ Node :: cleanup_peers() {
 	while (true) {
 		// Wait until we're signaled that a connection
 		// is closed.
-		close_notify_sem->acquire();
+		m_close_notify_sem->acquire();
 		// TODO: clean up garbage peers
 	}
 }
@@ -58,7 +58,7 @@ Node :: handle_new_connections() {
 	auto conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
 	while (true) {
 		int status = 0;
-		if ( (status = sock.accept(conn_ptr.get())) == 0) {
+		if ( (status = m_sock.accept(conn_ptr.get())) == 0) {
 			conn_ptr->set_timeout(1,0);
 			on_accept(std::move(conn_ptr));
 			conn_ptr = std::make_unique<cpl::net::TCP_Connection>();
@@ -75,22 +75,20 @@ Node :: handle_new_connections() {
 
 void
 Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
-	peers_lock->lock();
+	std::lock_guard<cpl::Mutex> lk(*m_peers_lock);
 	// TODO: create a new peer with conn_ptr
-	peers_lock->unlock();
 }
 
 void
 Node :: connect_to_peer(cpl::net::SockAddr address) {
-	peers_lock->lock();
+	std::lock_guard<cpl::Mutex> lk(*m_peers_lock);
 	// TODO: create a new connection and connect.
-	peers_lock->unlock();
 }
 
 void
 Node :: process_message() {
 	std::unique_ptr<Message> m;
-	if (mq->pop_with_timeout(m, 50)) {
+	if (m_mq->pop_with_timeout(m, 50)) {
 		LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
 		switch (m->type) {
 		case MSG_PING:

@@ -21,18 +21,25 @@ public:
 		 std::unique_ptr<cpl::net::TCP_Connection> conn,
 		 std::shared_ptr<Message_Queue> mq,
 		 std::shared_ptr<cpl::Semaphore> close_notify_sem)
-	: index(index),
-	  id(0),
-	  address("")
+	: m_index(index),
+	  m_id(0),
+	  m_address(""),
+	  m_run_thread(true)
 	{ 
 		LOG(INFO) << "new peer created with index " << index;
 	}
 
-public:
+private:
 	// Local peer index
-	int index;
+	int m_index;
 	// Unique peer ID (sent by the peer or prespecified)
-	uint64_t id;
+	uint64_t m_id;
 	// Reconnection address (sent by peer)
-	std::string address;
+	std::string m_address;
+
+	std::atomic<bool> m_run_thread;
+	std::unique_ptr<std::thread> m_thread;
+
+	void
+	run();
 }; // Peer
