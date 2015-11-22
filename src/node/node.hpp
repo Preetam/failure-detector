@@ -47,7 +47,7 @@ public:
 	// If the node is unable to establish a connection, the
 	// peer is registered as a failed node.
 	void
-	connect_to_peer(cpl::net::SockAddr);
+	connect_to_peer(const cpl::net::SockAddr&);
 
 private:
 	uint64_t                        m_id;

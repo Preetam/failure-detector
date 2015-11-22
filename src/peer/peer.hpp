@@ -25,21 +25,26 @@ public:
 	  m_id(0),
 	  m_address(""),
 	  m_run_thread(true)
-	{ 
-		LOG(INFO) << "new peer created with index " << index;
+	{
+		LOG(INFO) << "new peer created with index " << m_index;
+	}
+
+	void
+	set_address(const std::string& address)
+	{
+		m_address = address;
 	}
 
 private:
 	// Local peer index
-	int m_index;
+	int                             m_index;
 	// Unique peer ID (sent by the peer or prespecified)
-	uint64_t m_id;
+	uint64_t                        m_id;
 	// Reconnection address (sent by peer)
-	std::string m_address;
-
-	std::atomic<bool> m_run_thread;
-	std::unique_ptr<std::thread> m_thread;
+	std::string                     m_address;
+	std::atomic<bool>               m_run_thread;
+	std::unique_ptr<std::thread>    m_thread;
 
 	void
-	run();
+	run(std::shared_ptr<cpl::Semaphore>);
 }; // Peer

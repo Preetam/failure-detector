@@ -41,6 +41,7 @@ Node :: run() {
 			LOG(WARNING) << "Main node loop iteration took over 1000 ms!";
 		}
 	}
+	// Unreachable
 }
 
 void
@@ -80,9 +81,21 @@ Node :: on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr) {
 }
 
 void
-Node :: connect_to_peer(cpl::net::SockAddr address) {
+Node :: connect_to_peer(const cpl::net::SockAddr& address) {
 	std::lock_guard<cpl::Mutex> lk(*m_peers_lock);
-	// TODO: create a new connection and connect.
+	auto peer_conn = std::make_unique<cpl::net::TCP_Connection>();
+	std::shared_ptr<Peer> peer;
+	// Attempt to connect.
+	int status = peer_conn->connect(address);
+	if (status < 0) {
+		LOG(WARNING) << "unable to connect to " << address;
+		peer_conn = nullptr;
+	} else {
+		LOG(INFO) << "successfully connected to " << address;
+		peer_conn->set_timeout(1,0);
+	}
+	peer = std::make_shared<Peer>(m_index_counter++, std::move(peer_conn), m_mq, m_close_notify_sem);
+	peer->set_address(address.str());
 }
 
 void
