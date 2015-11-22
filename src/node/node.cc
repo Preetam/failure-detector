@@ -29,10 +29,28 @@ Node :: run() {
 		handle_new_connections();
 	});
 	
+	m_last_leader_active = std::chrono::steady_clock::now();
 	while (true) {
 		auto start = std::chrono::steady_clock::now();
 		// This is the main node loop.
 		process_message();
+
+		if (m_trusted_peer == 0 ||
+			(std::chrono::steady_clock::now() - m_last_leader_active > std::chrono::seconds(1)) ) {
+			m_trusted_peer = m_registry->trusted_after(m_trusted_peer);
+			if (m_trusted_peer == 0 || m_trusted_peer > m_id) {
+				// Become leader.
+				LOG(INFO) << "became leader";
+				m_trusted_peer = m_id;
+			}
+		}
+
+		if (m_trusted_peer == m_id) {
+			// Currently the leader.
+			LeaderActiveMessage msg(m_id);
+			m_registry->broadcast_message(msg);
+			m_last_leader_active = std::chrono::steady_clock::now();
+		}
 
 		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::steady_clock::now() - start).count();
@@ -111,7 +129,7 @@ void
 Node :: process_message() {
 	std::unique_ptr<Message> m;
 	if (m_mq->pop_with_timeout(m, 50)) {
-		LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
+		//LOG(INFO) << "new message (type " << MSG_STR(m->type) << ")";
 		switch (m->type) {
 		case MSG_PING:
 			handle_ping(*m);
@@ -125,6 +143,8 @@ Node :: process_message() {
 		case MSG_IDENT_REQUEST:
 			handle_ident_request(*m);
 			break;
+		case MSG_LEADER_ACTIVE:
+			handle_leader_active(*m);
 		default:
 			break;
 		}
@@ -151,4 +171,18 @@ Node :: handle_ident(const Message& m) {
 void
 Node :: handle_ident_request(const Message& m) {
 	// TODO
+}
+
+void
+Node :: handle_leader_active(const Message& m) {
+	auto leader_active_msg = static_cast<const LeaderActiveMessage&>(m);
+	if (leader_active_msg.id < m_trusted_peer) {
+		LOG(INFO) << "received leader message from higher ranked leader (" <<
+			leader_active_msg.id << "). " <<
+			"Marking " << leader_active_msg.id << " as leader.";
+		m_trusted_peer = leader_active_msg.id;
+	}
+	if (m_trusted_peer == leader_active_msg.id) {
+		m_last_leader_active = std::chrono::steady_clock::now();
+	}
 }

@@ -14,6 +14,7 @@
 #include "message/message.hpp"
 #include "message/identity_message.hpp"
 #include "message/ping_pong_message.hpp"
+#include "message/leader_message.hpp"
 #include "message_queue/message_queue.hpp"
 #include "peer/peer.hpp"
 #include "peer_registry.hpp"
@@ -46,15 +47,18 @@ public:
 	connect_to_peer(const cpl::net::SockAddr&);
 
 private:
-	uint64_t                        m_id;
-	std::string                     m_listen_address;
-	cpl::net::TCP_Socket            m_sock;
-	std::shared_ptr<Message_Queue>  m_mq;
-	std::shared_ptr<PeerRegistry>   m_registry;
+	uint64_t                              m_id;
+	std::string                           m_listen_address;
+	cpl::net::TCP_Socket                  m_sock;
+	std::shared_ptr<Message_Queue>        m_mq;
+	std::shared_ptr<PeerRegistry>         m_registry;
 	// close_notify_sem notifies the cleanup thread
 	// whenever a Peer connection closes.
-	std::shared_ptr<cpl::Semaphore> m_close_notify_sem;
-	int                             m_index_counter;
+	std::shared_ptr<cpl::Semaphore>       m_close_notify_sem;
+	int                                   m_index_counter;
+
+	uint64_t                              m_trusted_peer;
+	std::chrono::steady_clock::time_point m_last_leader_active;
 
 	// process_message processes a single message in the inbound
 	// message queue. This function blocks up to 33 milliseconds.
@@ -85,4 +89,6 @@ private:
 	handle_ident(const Message&);
 	void
 	handle_ident_request(const Message&);
+	void
+	handle_leader_active(const Message&);
 }; // Node

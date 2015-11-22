@@ -4,7 +4,7 @@
 #include "message.hpp"
 #include "identity_message.hpp"
 #include "ping_pong_message.hpp"
-#include "suspect_message.hpp"
+#include "leader_message.hpp"
 
 /**
  * A message header has 4 fields:
@@ -29,7 +29,7 @@ Message :: pack(uint8_t* dest, int dest_len) {
 	write8be(flags, dest);
 	dest++;
 	dest_len--;
-	write64be(id, dest);
+	write64be(message_id, dest);
 	dest += 8;
 	dest_len -= 8;
 	write32be(length, dest);
@@ -53,7 +53,7 @@ Message :: unpack(uint8_t* src, int src_len) {
 	src++;
 	flags = read8be(src);
 	src++;
-	id = read64be(src);
+	message_id = read64be(src);
 	src += 8;
 	uint32_t length = read32be(src);
 	src += 4;
@@ -81,11 +81,8 @@ decode_message(std::unique_ptr<Message>& m, uint8_t* src, int src_len) {
 	case MSG_IDENT:
 		m = std::make_unique<IdentityMessage>();
 		break;
-	case MSG_SUSPECT:
-		m = std::make_unique<SuspectMessage>();
-		break;
-	case MSG_STILL_ALIVE:
-		m = std::make_unique<StillAliveMessage>();
+	case MSG_LEADER_ACTIVE:
+		m = std::make_unique<LeaderActiveMessage>();
 		break;
 	default:
 		return -1;

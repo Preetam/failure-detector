@@ -19,11 +19,8 @@ enum MESSAGE_TYPE : uint8_t
 	MSG_IDENT_REQUEST,
 	// Identification
 	MSG_IDENT,
-	// Suspected node
-	MSG_SUSPECT,
-	// Still alive message (in
-	// response to MSG_SUSPECT)
-	MSG_STILL_ALIVE
+	// Active leader
+	MSG_LEADER_ACTIVE
 };
 
 inline
@@ -33,8 +30,7 @@ const char* MSG_STR(uint8_t type) {
 	case MSG_PONG: return "MSG_PONG";
 	case MSG_IDENT_REQUEST: return "MSG_IDENT_REQUEST";
 	case MSG_IDENT: return "MSG_IDENT";
-	case MSG_SUSPECT: return "MSG_SUSPECT";
-	case MSG_STILL_ALIVE: return "MSG_STILL_ALIVE";
+	case MSG_LEADER_ACTIVE: return "MSG_LEADER_ACTIVE";
 	}
 
 	return "MSG_INVALID";
@@ -59,12 +55,12 @@ public:
 	}
 
 	Message(uint8_t type)
-	: type(type), flags(0), id(rng())
+	: type(type), flags(0), message_id(rng())
 	{
 	}
 
 	Message(uint8_t type, uint8_t flags)
-	: type(type), flags(flags), id(rng())
+	: type(type), flags(flags), message_id(rng())
 	{
 	}
 
@@ -93,6 +89,9 @@ public:
 		return 0;
 	}
 
+	virtual std::unique_ptr<Message>
+	clone() = 0;
+
 	virtual int
 	pack_body(uint8_t* dest, int dest_len) = 0;
 
@@ -103,5 +102,5 @@ public:
 	int source;
 	uint8_t type;
 	uint8_t flags;
-	uint64_t id;
+	uint64_t message_id;
 };

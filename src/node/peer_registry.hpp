@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <atomic>
 
@@ -45,6 +46,25 @@ public:
 	}
 
 	void
+	broadcast_message(Message& m)
+	{
+		for (auto& i : m_peers) {
+			i.second->send_message(m.clone());
+		}
+	}
+
+	uint64_t
+	trusted_after(uint64_t id)
+	{
+		for (auto& i : m_id_to_index) {
+			if (i.first > id) {
+				return i.first;
+			}
+		}
+		return 0;
+	}
+
+	void
 	set_identity(int index, uint64_t id, std::string& address)
 	{
 		std::lock_guard<cpl::Mutex> lk(m_mtx);
@@ -82,7 +102,7 @@ public:
 
 private:
 	std::unordered_map<int, shared_peer> m_peers;
-	std::unordered_map<uint64_t, int>    m_id_to_index;
+	std::map<uint64_t, int>              m_id_to_index;
 	cpl::Mutex                           m_mtx;
 
 	void

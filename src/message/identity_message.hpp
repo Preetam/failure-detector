@@ -13,7 +13,7 @@ public:
 	{
 	}
 
-	IdentityRequest(uint64_t id, std::string address)
+	IdentityRequest(uint64_t id, std::string& address)
 	: Message(MSG_IDENT_REQUEST), id(id), address(address)
 	{
 	}
@@ -54,6 +54,12 @@ public:
 		return 0;
 	}
 
+	std::unique_ptr<Message>
+	clone()
+	{
+		return std::make_unique<IdentityRequest>(id, address);
+	}
+
 public:
 	uint64_t id;
 	std::string address;
@@ -67,7 +73,7 @@ public:
 	{
 	}
 
-	IdentityMessage(uint64_t id, std::string address)
+	IdentityMessage(uint64_t id, std::string& address)
 	: Message(MSG_IDENT), id(id), address(address)
 	{
 	}
@@ -106,6 +112,12 @@ public:
 		}
 		address = std::string((const char*)src, address_size);
 		return 0;
+	}
+
+	std::unique_ptr<Message>
+	clone()
+	{
+		return std::make_unique<IdentityMessage>(id, address);
 	}
 
 public:
