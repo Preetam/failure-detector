@@ -8,7 +8,7 @@
 class MessageTimes
 {
 	using time_point = std::chrono::steady_clock::time_point;
-	using map_type = std::unordered_map<MESSAGE_TYPE, time_point>;
+	using map_type = std::unordered_map<uint8_t, time_point>;
 public:
 	MessageTimes()
 	{
