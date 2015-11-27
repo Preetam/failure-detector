@@ -43,8 +43,12 @@ public:
 
 	Peer& operator =(Peer&& rhs)
 	{
+		cpl::RWLock lk(*rhs.m_mtx, cpl::RWLock::Writer);
 		rhs.m_run_thread = false;
-		m_address = rhs.m_address;
+		if (rhs.m_address != "") {
+			m_address = rhs.m_address;
+			rhs.m_address = "";
+		}
 		m_conn = std::move(rhs.m_conn);
 		rhs.m_conn = nullptr;
 		return *this;

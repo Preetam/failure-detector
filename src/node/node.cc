@@ -42,6 +42,8 @@ Node :: run() {
 				// Become leader.
 				LOG(INFO) << "became leader";
 				m_trusted_peer = m_id;
+			} else {
+				LOG(INFO) << m_trusted_peer << " is now the leader";
 			}
 		}
 
