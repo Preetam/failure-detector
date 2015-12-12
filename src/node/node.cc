@@ -172,7 +172,8 @@ Node :: handle_ident(const Message& m) {
 
 void
 Node :: handle_ident_request(const Message& m) {
-	// TODO
+	auto msg = std::make_unique<IdentityMessage>(m_id, m_listen_address);
+	m_registry->send_message_to_index(m.source, std::move(msg));
 }
 
 void
