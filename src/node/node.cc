@@ -155,7 +155,8 @@ Node :: process_message() {
 
 void
 Node :: handle_ping(const Message& m) {
-	// TODO
+	auto msg = std::make_unique<PongMessage>();
+	m_registry->send_message_to_index(m.source, std::move(msg));
 }
 
 void
