@@ -34,10 +34,10 @@ main(int argc, char* argv[]) {
 
 	// Flags
 	cpl::Flags flags(NAME, VERSION);
-	flags.add_option("--help", "-h", "show help documentation", show_help, &flags);
+	flags.add_option("--help",   "-h", "show help documentation", show_help, &flags);
 	flags.add_option("--listen", "-l", "set listen address", set_listen_string, &addr_str);
-	flags.add_option("--peers", "-p", "list of peers", add_peers, &peer_addrs);
-	flags.add_option("--id", "-i", "ID, unique among the cluster", set_id, &id);
+	flags.add_option("--peers",  "-p", "list of peers", add_peers, &peer_addrs);
+	flags.add_option("--id",     "-i", "ID, unique among the cluster", set_id, &id);
 	flags.parse(argc, argv);
 
 	// Check required flags

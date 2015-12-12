@@ -11,6 +11,7 @@
 #include <cpl/semaphore.hpp>
 #include <cpl/rwmutex.hpp>
 
+#include "buffer.hpp"
 #include "message/decode.hpp"
 #include "message/message_times.hpp"
 #include "message_queue/message_queue.hpp"
