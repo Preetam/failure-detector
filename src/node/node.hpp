@@ -5,17 +5,10 @@
 #include <memory>
 #include <cerrno>
 
+#include <uv.h>
 #include <glog/logging.h>
 #include <cpl/net/sockaddr.hpp>
-#include <cpl/net/tcp_socket.hpp>
-#include <cpl/semaphore.hpp>
 
-#include "message/identity_message.hpp"
-#include "message/message.hpp"
-#include "message/identity_message.hpp"
-#include "message/ping_pong_message.hpp"
-#include "message/leader_message.hpp"
-#include "message_queue/message_queue.hpp"
 #include "peer/peer.hpp"
 #include "peer_registry.hpp"
 
@@ -23,10 +16,8 @@ class Node
 {
 public:
 	Node(uint64_t id)
-	: m_id(id),
-	  m_mq(std::make_shared<Message_Queue>()),
-	  m_registry(std::make_shared<PeerRegistry>()),
-	  m_close_notify_sem(std::make_shared<cpl::Semaphore>(0))
+	: m_id(id)
+	, m_peer_registry(std::make_unique<PeerRegistry>())
 	{
 	}
 
@@ -49,46 +40,25 @@ public:
 private:
 	uint64_t                              m_id;
 	std::string                           m_listen_address;
-	cpl::net::TCP_Socket                  m_sock;
-	std::shared_ptr<Message_Queue>        m_mq;
-	std::shared_ptr<PeerRegistry>         m_registry;
-	// close_notify_sem notifies the cleanup thread
-	// whenever a Peer connection closes.
-	std::shared_ptr<cpl::Semaphore>       m_close_notify_sem;
+	std::unique_ptr<uv_loop_t>            m_uv_loop;
+	std::unique_ptr<uv_tcp_t>             m_tcp;
+	std::unique_ptr<PeerRegistry>         m_peer_registry;
 	int                                   m_index_counter;
 
 	uint64_t                              m_trusted_peer;
 	std::chrono::steady_clock::time_point m_last_leader_active;
 
-	// process_message processes a single message in the inbound
-	// message queue. This function blocks up to 33 milliseconds.
-	void
-	process_message();
-
-	// cleanup_peers runs in a separate thread to clean up
-	// disconnected Peer instances.
-	void
-	cleanup_peers();
-
-	// handle_new_connections runs in a separate thread to
-	// accept new connections.
-	void
-	handle_new_connections();
-
-	// on_accept is the function called by handle_new_connections
-	// whenever a new connection is accepted.
-	void
-	on_accept(std::unique_ptr<cpl::net::TCP_Connection> conn_ptr);
-
-	// Message handlers
-	void
-	handle_ping(const Message&);
-	void
-	handle_pong(const Message&);
-	void
-	handle_ident(const Message&);
-	void
-	handle_ident_request(const Message&);
-	void
-	handle_leader_active(const Message&);
+	static void
+	on_connect(uv_stream_t* server, int status) {
+		auto self = (Node*)server->data;
+		if (status < 0) {
+			return;
+		}
+		auto client = std::make_unique<uv_tcp_t>();
+		uv_tcp_init(server->loop, client.get());
+		uv_accept(server, (uv_stream_t*)client.get());
+		auto peer = std::make_shared<Peer>(std::move(client));
+		peer->run();
+		self->m_peer_registry->register_peer(++self->m_index_counter, peer);
+	}
 }; // Node
