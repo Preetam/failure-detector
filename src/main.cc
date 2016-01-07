@@ -62,8 +62,16 @@ main(int argc, char* argv[]) {
 	}
 
 	Node n(id);
-	n.start(addr_str);
+	if (n.start(addr_str) < 0) {
+		LOG(WARNING) << "failed to start";
+		return 1;
+	}
 	LOG(INFO) << "listening on " << addr_str << " with ID " << id;
+
+	for (int i = 0; i < peer_addrs.size(); i++) {
+		n.connect_to_peer(peer_addrs[i]);
+	}
+
 	n.run();
 
 	// Unreachable

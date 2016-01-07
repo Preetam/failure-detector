@@ -5,7 +5,6 @@
 #include <memory>
 #include <atomic>
 
-#include "cpl/mutex.hpp"
 #include "peer/peer.hpp"
 
 class PeerRegistry
@@ -20,12 +19,41 @@ public:
 	void
 	register_peer(int index, shared_peer peer)
 	{
-		std::lock_guard<cpl::Mutex> lk(m_mtx);
+		peer->set_index(index);
 		m_peers[index] = peer;
+	}
+
+	void
+	set_identity(const int index, const uint64_t id, const std::string& address)
+	{
+		auto peer = m_peers[index];
+		peer->set_identity(id, address);
+		// Check if another index has the same ID. If so,
+		// update the other one.
+		for (auto i = std::begin(m_peers); i != std::end(m_peers); ++i) {
+			auto p = i->second;
+			if (i->first != index && p->id() == id) {
+				LOG(INFO) << "duplicate peer " << id;
+				*p = std::move(*peer);
+				cleanup();
+			}
+		}
+	}
+
+	void
+	cleanup()
+	{
+		for (auto i = std::begin(m_peers); i != std::end(m_peers); ) {
+			if (i->second == nullptr) {
+				i = m_peers.erase(i);
+			} else if (i->second->done()) {
+				i = m_peers.erase(i);
+			} else {
+				++i;
+			}
+		}
 	}
 
 private:
 	std::unordered_map<int, shared_peer> m_peers;
-	std::map<uint64_t, int>              m_id_to_index;
-	cpl::Mutex                           m_mtx;
 }; // PeerRegistry

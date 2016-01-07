@@ -11,6 +11,8 @@
 
 #include "peer/peer.hpp"
 #include "peer_registry.hpp"
+#include "message_queue/message_queue.hpp"
+#include "message/identity_message.hpp"
 
 class Node
 {
@@ -18,6 +20,7 @@ public:
 	Node(uint64_t id)
 	: m_id(id)
 	, m_peer_registry(std::make_unique<PeerRegistry>())
+	, m_mq(std::make_shared<Message_Queue>())
 	{
 	}
 
@@ -35,7 +38,7 @@ public:
 	// If the node is unable to establish a connection, the
 	// peer is registered as a failed node.
 	void
-	connect_to_peer(const cpl::net::SockAddr&);
+	connect_to_peer(cpl::net::SockAddr&);
 
 private:
 	uint64_t                              m_id;
@@ -44,21 +47,17 @@ private:
 	std::unique_ptr<uv_tcp_t>             m_tcp;
 	std::unique_ptr<PeerRegistry>         m_peer_registry;
 	int                                   m_index_counter;
+	std::shared_ptr<Message_Queue>        m_mq;
 
 	uint64_t                              m_trusted_peer;
 	std::chrono::steady_clock::time_point m_last_leader_active;
 
 	static void
-	on_connect(uv_stream_t* server, int status) {
-		auto self = (Node*)server->data;
-		if (status < 0) {
-			return;
-		}
-		auto client = std::make_unique<uv_tcp_t>();
-		uv_tcp_init(server->loop, client.get());
-		uv_accept(server, (uv_stream_t*)client.get());
-		auto peer = std::make_shared<Peer>(std::move(client));
-		peer->run();
-		self->m_peer_registry->register_peer(++self->m_index_counter, peer);
-	}
+	on_connect(uv_stream_t* server, int status);
+
+	void
+	handle_message(Message*);
+
+	void
+	handle_ident(const Message&);
 }; // Node

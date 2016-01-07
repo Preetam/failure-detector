@@ -68,6 +68,9 @@ public:
 	pack(uint8_t* dest, int dest_len);
 
 	int
+	packed_size();
+
+	int
 	unpack(uint8_t* src, int src_len);
 
 	inline bool
