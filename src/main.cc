@@ -41,6 +41,7 @@ main(int argc, char* argv[]) {
 	// These are automatically marked as valid.
 	std::vector<cpl::net::SockAddr> peer_addrs;
 	uint64_t id = 0;
+	int cluster_size = 0;
 
 	// Flags
 	cpl::Flags flags(NAME, VERSION);
@@ -48,6 +49,8 @@ main(int argc, char* argv[]) {
 	flags.add_option("--listen", "-l", "set listen address", set_listen_string, &addr_str);
 	flags.add_option("--peers", "-p", "list of peers", add_peers, &peer_addrs);
 	flags.add_option("--id", "-i", "ID, unique among the cluster", set_id, &id);
+	flags.add_option("--cluster-size", "-s", "Total size of the cluster. Determines quorum size.",
+		set_cluster_size, &cluster_size);
 	flags.parse(argc, argv);
 
 	// Check required flags
@@ -61,7 +64,12 @@ main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	Node n(id);
+	if (cluster_size == 0) {
+		LOG(INFO) << "--cluster-size is currently 0. Increasing to 1." << std::endl;
+		cluster_size = 1;
+	}
+
+	Node n(id, cluster_size);
 	if (n.start(addr_str) < 0) {
 		LOG(WARNING) << "failed to start";
 		return 1;

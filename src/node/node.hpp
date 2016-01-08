@@ -17,11 +17,13 @@
 class Node
 {
 public:
-	Node(uint64_t id)
+	Node(uint64_t id, int cluster_size)
 	: m_id(id)
+	, m_cluster_size(cluster_size)
 	, m_peer_registry(std::make_unique<PeerRegistry>())
 	, m_mq(std::make_shared<Message_Queue>())
 	{
+		LOG(INFO) << "Node initialized with cluster size " << m_cluster_size;
 	}
 
 	// start starts a node listening at address.
@@ -48,6 +50,7 @@ private:
 	std::unique_ptr<PeerRegistry>         m_peer_registry;
 	int                                   m_index_counter;
 	std::shared_ptr<Message_Queue>        m_mq;
+	int                                   m_cluster_size;
 
 	uint64_t                              m_trusted_peer;
 	std::chrono::steady_clock::time_point m_last_leader_active;
