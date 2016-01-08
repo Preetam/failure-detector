@@ -44,43 +44,14 @@ This repository uses submodules. The following will fetch them if you haven't do
 $ git submodule update --init --recursive
 ```
 
-### Libraries
-
-The following libraries are required:
-* libuv
-* glog
-
-#### libuv
-
-**OS X (using Homebrew):**  
-```sh
-$ brew install --HEAD libuv
-```
-
-**Ubuntu:**
-```sh
-$ sudo apt-get install libuv-dev
-```
-
-#### glog
-**Building from source:**  
-```sh
-$ git clone https://github.com/google/glog.git && cd glog
-$ ./configure
-$ make
-$ sudo make install
-```
-**Ubuntu:**  
-```sh
-$ sudo apt-get install libgoogle-glog-dev
-```
+You will also need CMake version 3.0 or higher.
 
 ### Building
 
 ```sh
-$ make       # Build main program
-$ make test  # Runs tests (not that many at this point)
-$ make clean # Cleans up
+$ mkdir build && cd build
+$ cmake ..
+$ make
 ```
 
 License

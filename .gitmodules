@@ -1,3 +1,9 @@
 [submodule "include/cpl"]
 	path = include/cpl
 	url = https://github.com/Preetam/cpl.git
+[submodule "dep/glog"]
+	path = dep/glog
+	url = https://github.com/Preetam/glog.git
+[submodule "dep/libuv"]
+	path = dep/libuv
+	url = https://github.com/Preetam/libuv.git
