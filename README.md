@@ -1,5 +1,5 @@
-failure-detector
-===
+# failure-detector
+
 An implementation of a failure detector. It is still a work-in-progress.
 
 A [failure detector](http://www.cs.yale.edu/homes/aspnes/pinewiki/FailureDetectors.html)
@@ -9,8 +9,8 @@ distributed consensus. In fact, a failure detector can provide eventual leader e
 Chandra and Toueg have shown that in asynchronous networks (like the Internet) consensus
 can be solved with unreliable failure detectors that make an infinite number of mistakes.
 
-Background
----
+## Background
+
 There are many ways to implement a failure detector. For example, you may choose to use pings
 between pairs of nodes in a cluster or have one node broadcast heartbeats to monitor node
 status. There are also different options to implement leader election, such as using a ring,
@@ -33,8 +33,8 @@ when it is online.
 Keep in mind that this is just the background and not a rigorous explanation of the implementation!
 It's not completely implemented yet, so this document will be updated as things change.
 
-Building
----
+## Dependencies and Building
+
 You will need a compiler that supports C++14. Only Linux and OS X are supported at the moment,
 but things should be fine on other BSDs.
 
@@ -44,28 +44,14 @@ This repository uses submodules. The following will fetch them if you haven't do
 $ git submodule update --init --recursive
 ```
 
-You'll also need to install glog, a C++ implementation of the Google logging module.
-Installing glog should be as simple as...
+You will also need CMake version 3.0 or higher.
+
+### Building
 
 ```sh
-$ git clone https://github.com/google/glog.git && cd glog
-$ ./configure
+$ mkdir build && cd build
+$ cmake ..
 $ make
-$ sudo make install
-```
-
-Alternatively, if you're on Ubuntu, you can do the following:
-
-```sh
-$ sudo apt-get install libgoogle-glog-dev
-```
-
-Finally, you can run the following to build the main program:
-
-```sh
-$ make       # Build main program
-$ make test  # Runs tests (not that many at this point)
-$ make clean # Cleans up
 ```
 
 License

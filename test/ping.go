@@ -14,18 +14,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var buf [100]byte
+	//var buf [100]byte
 
 	for _ = range time.Tick(time.Second) {
-		_, err := conn.Write([]byte{0x1, 0x3, 0x0, 0x0, 0x0, 'f', 'o', 'o'})
+		_, err := conn.Write([]byte{
+			// Length
+			14, 0x0, 0x0, 0x0,
+			// Type (MSG_PING)
+			0x1,
+			// ID
+			0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+			// No body
+		})
 		if err != nil {
 			return
 		}
-		b := buf[:]
-		_, err = conn.Read(b)
-		if err != nil {
-			return
-		}
-		log.Println(string(b))
 	}
 }

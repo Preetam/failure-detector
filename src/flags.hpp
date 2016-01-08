@@ -35,6 +35,12 @@ set_id(std::string a, std::string b, void* d) {
 }
 
 void
+set_cluster_size(std::string a, std::string b, void* d) {
+	auto cluster_size = reinterpret_cast<int*>(d);
+	*cluster_size = atoi(b.c_str());
+}
+
+void
 add_peers(std::string a, std::string b, void* d) {
 	auto peers = reinterpret_cast<std::vector<cpl::net::SockAddr>*>(d);
 

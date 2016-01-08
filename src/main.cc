@@ -5,8 +5,6 @@
 #include <glog/logging.h>
 #include <cpl/flags.hpp>
 #include <cpl/net/sockaddr.hpp>
-#include <cpl/net/tcp_socket.hpp>
-#include <cpl/net/tcp_connection.hpp>
 
 #include "flags.hpp"
 #include "node/node.hpp"
@@ -14,12 +12,24 @@
 const std::string NAME    = "failure-detector";
 const std::string VERSION = "0.0.4";
 
+void new_conn_cb(uv_stream_t* server, int status) {
+	if (status < 0) {
+		LOG(ERROR) << "couldn't get a new connection";
+	} else {
+		LOG(INFO) << "got a new connection. accepting...";
+		uv_tcp_t client;
+		uv_tcp_init(server->loop, &client);
+		if (uv_accept(server, (uv_stream_t*)&client) < 0) {
+			LOG(ERROR) << "couldn't accept connection";
+		}
+	}
+}
+
 int
 main(int argc, char* argv[]) {
 	// Logging setup.
 	google::InitGoogleLogging(argv[0]);
 	FLAGS_logtostderr = 1;
-	LOG(INFO) << "Set up logging";
 
 	// Ignore SIGPIPE. This way we don't exit if we attempt to
 	// write to a closed connection.
@@ -31,6 +41,7 @@ main(int argc, char* argv[]) {
 	// These are automatically marked as valid.
 	std::vector<cpl::net::SockAddr> peer_addrs;
 	uint64_t id = 0;
+	int cluster_size = 0;
 
 	// Flags
 	cpl::Flags flags(NAME, VERSION);
@@ -38,6 +49,8 @@ main(int argc, char* argv[]) {
 	flags.add_option("--listen", "-l", "set listen address", set_listen_string, &addr_str);
 	flags.add_option("--peers", "-p", "list of peers", add_peers, &peer_addrs);
 	flags.add_option("--id", "-i", "ID, unique among the cluster", set_id, &id);
+	flags.add_option("--cluster-size", "-s", "Total size of the cluster. Determines quorum size.",
+		set_cluster_size, &cluster_size);
 	flags.parse(argc, argv);
 
 	// Check required flags
@@ -51,23 +64,24 @@ main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	auto node = std::make_shared<Node>(id);
-	int status = node->start(addr_str);
-	if (status < 0) {
-		std::cerr << "failed to start " << NAME << std::endl;
+	if (cluster_size == 0) {
+		LOG(INFO) << "--cluster-size is currently 0. Increasing to 1." << std::endl;
+		cluster_size = 1;
+	}
+
+	Node n(id, cluster_size);
+	if (n.start(addr_str) < 0) {
+		LOG(WARNING) << "failed to start";
 		return 1;
 	}
-	// Connect to each specified peer.
-	// If a connection can't be established, the peer is
-	// marked as inactive and reconnections will be attempted.
+	LOG(INFO) << "listening on " << addr_str << " with ID " << id;
+
 	for (int i = 0; i < peer_addrs.size(); i++) {
-		node->connect_to_peer(peer_addrs[i]);
+		n.connect_to_peer(peer_addrs[i]);
 	}
 
-	LOG(INFO) << NAME << " " << VERSION << " listening on " << addr_str;
-	LOG(INFO) << "Unique ID is " << id;
-	node->run();
+	n.run();
 
 	// Unreachable
-	return 0;
+	return 1;
 }
