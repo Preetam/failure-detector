@@ -1,3 +1,4 @@
+BINARY   := failure-detector
 SRC      := ${shell find ./src -name *.cc}
 TEST_SRC := ${shell find ./test -name *.cc}
 OBJ      := ${SRC:.cc=.o}
@@ -12,10 +13,7 @@ INCL     += ${shell find ./src -name *.hpp}
 CXXFLAGS = -std=c++14 -I./src -I./include -fPIC
 LD_FLAGS = -L./build -lglog -luv -lpthread
 
-debug: CXXFLAGS += -DDEBUG -g
-debug: build/failure-detector
-
-all: prepare build/failure-detector build/test
+all: prepare build/$(BINARY) build/test
 
 src/%.o: src/%.cc src/%.hpp
 	$(CXX) $(CXXFLAGS) -std=c++14 -fPIC -c -o $@ $<
@@ -23,7 +21,7 @@ src/%.o: src/%.cc src/%.hpp
 test/%.o: test/%.cc test/%.hpp
 	$(CXX) $(CXXFLAGS) -std=c++14 -fPIC -c -o $@ $<
 
-build/failure-detector: prepare $(OBJ)
+build/$(BINARY): prepare $(OBJ)
 	$(CXX) -fPIC -o $@ $(OBJ) $(LD_FLAGS)
 
 build/test: $(TEST_OBJ)

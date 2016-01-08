@@ -26,7 +26,13 @@ public:
 	void
 	set_identity(const int index, const uint64_t id, const std::string& address)
 	{
-		auto peer = m_peers[index];
+		Peer* peer;
+		try {
+			auto peer_ptr = m_peers.at(index);
+			peer = peer_ptr.get();
+		} catch (...) {
+			return;
+		}
 		peer->set_identity(id, address);
 		// Check if another index has the same ID. If so,
 		// update the other one.
@@ -36,6 +42,7 @@ public:
 				LOG(INFO) << "duplicate peer " << id;
 				*p = std::move(*peer);
 				cleanup();
+				break;
 			}
 		}
 	}

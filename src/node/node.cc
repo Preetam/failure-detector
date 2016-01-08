@@ -107,7 +107,6 @@ Node ::	on_connect(uv_stream_t* server, int status) {
 	uv_tcp_init(server->loop, client.get());
 	uv_accept(server, (uv_stream_t*)client.get());
 	auto peer = std::make_shared<Peer>(std::move(client), self->m_mq);
-	peer->run();
 	IdentityMessage ident_msg(self->m_id, self->m_listen_address);
 	peer->send(&ident_msg);
 	self->m_peer_registry->register_peer(++self->m_index_counter, peer);
