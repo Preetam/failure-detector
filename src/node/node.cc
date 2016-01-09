@@ -63,14 +63,7 @@ Node :: run() {
 	periodic_timer.data = this;
 	uv_timer_start(&periodic_timer, [](uv_timer_t* timer) {
 		auto self = (Node*)timer->data;
-		LOG(INFO) << "periodic run for node (id " << ((Node*)timer->data)->m_id << ")";
-		self->m_peer_registry->cleanup();
-		while (self->m_mq->size() > 0) {
-			auto msg = self->m_mq->pop();
-			LOG(INFO) << "got a new message of type " << MSG_STR(msg->type) <<
-				" from index " << msg->source;
-			self->handle_message(msg.get());
-		}
+		self->periodic();
 	},
 	1000, 1000);
 	if (uv_run(m_uv_loop.get(), UV_RUN_DEFAULT) < 0) {
@@ -78,23 +71,6 @@ Node :: run() {
 		return;
 	}
 	uv_loop_close(m_uv_loop.get());
-}
-
-void
-Node :: handle_message(Message* msg) {
-	switch (msg->type) {
-	case MSG_IDENT:
-		handle_ident(*msg);
-		break;
-	}
-}
-
-void
-Node :: handle_ident(const Message& msg) {
-	auto ident_msg = static_cast<const IdentityMessage&>(msg);
-	m_peer_registry->set_identity(ident_msg.source, ident_msg.id, ident_msg.address);
-	LOG(INFO) << ident_msg.source << " has ID " << ident_msg.id << " and address " <<
-		ident_msg.address;
 }
 
 void
@@ -110,4 +86,38 @@ Node ::	on_connect(uv_stream_t* server, int status) {
 	IdentityMessage ident_msg(self->m_id, self->m_listen_address);
 	peer->send(&ident_msg);
 	self->m_peer_registry->register_peer(++self->m_index_counter, peer);
+}
+
+void
+Node :: periodic() {
+	LOG(INFO) << "periodic run for node (id " << m_id << ")";
+
+	// Clean up the registry
+	m_peer_registry->cleanup();
+
+	// Process messages
+	while (m_mq->size() > 0) {
+		auto msg = m_mq->pop();
+		LOG(INFO) << "got a new message of type " << MSG_STR(msg->type) <<
+			" from index " << msg->source;
+
+		handle_message(msg.get());
+	}
+}
+
+void
+Node :: handle_message(const Message* msg) {
+	switch (msg->type) {
+	case MSG_IDENT:
+		handle_ident(*msg);
+		break;
+	}
+}
+
+void
+Node :: handle_ident(const Message& msg) {
+	auto ident_msg = static_cast<const IdentityMessage&>(msg);
+	m_peer_registry->set_identity(ident_msg.source, ident_msg.id, ident_msg.address);
+	LOG(INFO) << ident_msg.source << " has ID " << ident_msg.id << " and address " <<
+		ident_msg.address;
 }

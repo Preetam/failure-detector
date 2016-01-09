@@ -19,7 +19,8 @@ public:
 	}
 
 	inline int
-	pack_body(uint8_t* dest, int dest_len) {
+	pack_body(uint8_t* dest, int dest_len) const
+	{
 		return 0;
 	}
 
@@ -51,7 +52,8 @@ public:
 	}
 
 	inline int
-	pack_body(uint8_t* dest, int dest_len) {
+	pack_body(uint8_t* dest, int dest_len) const
+	{
 		return 0;
 	}
 

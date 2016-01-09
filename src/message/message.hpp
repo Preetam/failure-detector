@@ -65,10 +65,10 @@ public:
 	}
 
 	int
-	pack(uint8_t* dest, int dest_len);
+	pack(uint8_t* dest, int dest_len) const;
 
 	int
-	packed_size();
+	packed_size() const;
 
 	int
 	unpack(uint8_t* src, int src_len);
@@ -87,7 +87,7 @@ public:
 
 	// Virtual methods to override
 	virtual int
-	body_size()
+	body_size() const
 	{
 		return 0;
 	}
@@ -96,7 +96,7 @@ public:
 	clone() = 0;
 
 	virtual int
-	pack_body(uint8_t* dest, int dest_len) = 0;
+	pack_body(uint8_t* dest, int dest_len) const = 0;
 
 	virtual int
 	unpack_body(uint8_t* src, int src_len) = 0;

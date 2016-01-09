@@ -17,7 +17,7 @@
 #define MSG_HEADER_SIZE 14
 
 int
-Message :: pack(uint8_t* dest, int dest_len) {
+Message :: pack(uint8_t* dest, int dest_len) const {
 	int length = body_size() + MSG_HEADER_SIZE;
 	if (dest_len < length) {
 		return -1;
@@ -44,7 +44,7 @@ Message :: pack(uint8_t* dest, int dest_len) {
 }
 
 int
-Message :: packed_size() {
+Message :: packed_size() const {
 	return body_size() + MSG_HEADER_SIZE;
 }
 

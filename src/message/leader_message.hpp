@@ -19,13 +19,14 @@ public:
 	}
 
 	inline int
-	body_size()
+	body_size() const
 	{
 		return 8;
 	}
 
 	inline int
-	pack_body(uint8_t* dest, int dest_len) {
+	pack_body(uint8_t* dest, int dest_len) const
+	{
 		if (dest_len < 8) {
 			return -1;
 		}

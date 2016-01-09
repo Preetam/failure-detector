@@ -55,11 +55,14 @@ private:
 	uint64_t                              m_trusted_peer;
 	std::chrono::steady_clock::time_point m_last_leader_active;
 
+	void
+	periodic();
+
 	static void
 	on_connect(uv_stream_t* server, int status);
 
 	void
-	handle_message(Message*);
+	handle_message(const Message*);
 
 	void
 	handle_ident(const Message&);
