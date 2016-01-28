@@ -23,7 +23,7 @@ class of failure detectors for solving consensus. This implementation is describ
 
 ![slide](https://cloud.githubusercontent.com/assets/379404/11109137/691dd8b6-88bb-11e5-9a57-bcf1ff42f63c.png)
 
-All of the nodes in a cluster are organized into a chain ordered by ID. The nodes with the lowest
+All of the nodes in a cluster are organized into a chain ordered by ID. The node with the lowest
 ID is at the head of the chain. Each node waits for a heartbeat from its *trusted* process or node.
 If a heartbeat is not received by some timeout, the node is suspected to have failed. Any node
 that suspects the failure of the node immediately before it in the chain assumes the role of
